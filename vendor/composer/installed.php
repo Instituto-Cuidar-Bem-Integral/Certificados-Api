@@ -3,11 +3,11 @@
         'name' => 'instituto/certificados',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '86c53f96afbd01615239bb37691acb5aaf29f36f',
+        'reference' => '96789a3026518d945be8ed1fd5541b450dc36579',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'bacon/bacon-qr-code' => array(
@@ -40,7 +40,7 @@
         'instituto/certificados' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '86c53f96afbd01615239bb37691acb5aaf29f36f',
+            'reference' => '96789a3026518d945be8ed1fd5541b450dc36579',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

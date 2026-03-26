@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${1:-/var/www/Cuidado-Integral-Api/certificados}"
+APP_DIR="${1:-/var/www/Cuidado-Integral-Api}"
 
 if ! command -v composer >/dev/null 2>&1; then
     echo "Composer nao encontrado no servidor." >&2

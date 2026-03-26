@@ -30,10 +30,10 @@ composer --version
 
 ## 3. Publicar os arquivos do projeto
 
-O repositório se chama `Cuidado-Integral-Api`, e a aplicação publicada pelo Nginx fica nesta subpasta:
+O repositório inteiro agora é a aplicação publicada pelo Nginx.
 
 ```bash
-/var/www/Cuidado-Integral-Api/certificados
+/var/www/Cuidado-Integral-Api
 ```
 
 Faça o clone assim:
@@ -42,19 +42,19 @@ Faça o clone assim:
 sudo mkdir -p /var/www
 cd /var/www
 sudo git clone https://github.com/Instituto-Cuidar-Bem-Integral/Cuidado-Integral-Api.git
-cd /var/www/Cuidado-Integral-Api/certificados
+cd /var/www/Cuidado-Integral-Api
 ```
 
-Se você criou a pasta errada antiga em `/var/www/certificados` e não vai usar ela, remova depois de confirmar que tudo está em `/var/www/Cuidado-Integral-Api/certificados`:
+Se você tinha a estrutura antiga com a subpasta `certificados/`, remova só depois de confirmar que tudo já está funcionando na raiz do projeto:
 
 ```bash
-sudo rm -rf /var/www/certificados
+sudo rm -rf /var/www/Cuidado-Integral-Api/certificados
 ```
 
 ## 4. Instalar as dependências PHP
 
 ```bash
-cd /var/www/Cuidado-Integral-Api/certificados
+cd /var/www/Cuidado-Integral-Api
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 ```
 
@@ -65,7 +65,7 @@ Se você usar um usuário comum de deploy em vez de `root`, pode rodar só `comp
 Importe o schema pronto:
 
 ```bash
-sudo mysql < /var/www/Cuidado-Integral-Api/certificados/sql/schema.sql
+sudo mysql < /var/www/Cuidado-Integral-Api/sql/schema.sql
 ```
 
 Depois crie um usuário exclusivo da aplicação:
@@ -84,7 +84,7 @@ EXIT;
 ## 6. Configurar o `.env`
 
 ```bash
-cd /var/www/Cuidado-Integral-Api/certificados
+cd /var/www/Cuidado-Integral-Api
 cp .env.example .env
 nano .env
 ```
@@ -105,12 +105,12 @@ CERT_SECRET=coloque-uma-chave-bem-grande-e-aleatoria
 O PHP precisa conseguir gravar os QR codes em `public/qrcodes`.
 
 ```bash
-cd /var/www/Cuidado-Integral-Api/certificados
+cd /var/www/Cuidado-Integral-Api
 mkdir -p public/qrcodes
 sudo chown -R www-data:www-data public/qrcodes
 sudo chmod -R 775 public/qrcodes
-sudo find /var/www/Cuidado-Integral-Api/certificados -type d -exec chmod 755 {} \;
-sudo find /var/www/Cuidado-Integral-Api/certificados -type f -exec chmod 644 {} \;
+sudo find /var/www/Cuidado-Integral-Api -type d -exec chmod 755 {} \;
+sudo find /var/www/Cuidado-Integral-Api -type f -exec chmod 644 {} \;
 sudo chmod -R 775 public/qrcodes
 ```
 
@@ -119,7 +119,7 @@ sudo chmod -R 775 public/qrcodes
 Copie o arquivo de exemplo deste repositório:
 
 ```bash
-sudo cp /var/www/Cuidado-Integral-Api/certificados/deploy/nginx/certificados.conf /etc/nginx/sites-available/certificados
+sudo cp /var/www/Cuidado-Integral-Api/deploy/nginx/certificados.conf /etc/nginx/sites-available/certificados
 sudo nano /etc/nginx/sites-available/certificados
 ```
 
@@ -174,7 +174,7 @@ O repositório já tem um workflow em:
 
 Ele faz isso a cada `push` para `main`:
 
-- sincroniza a pasta `certificados/` para a VPS
+- sincroniza a raiz do repositório para a VPS
 - preserva `.env`
 - preserva `public/qrcodes/`
 - roda `composer install --no-dev --optimize-autoloader` no servidor
@@ -187,7 +187,7 @@ Exemplo:
 sudo adduser deploy
 sudo usermod -aG www-data deploy
 sudo chown -R deploy:www-data /var/www/Cuidado-Integral-Api
-sudo chmod -R 775 /var/www/Cuidado-Integral-Api/certificados/public/qrcodes
+sudo chmod -R 775 /var/www/Cuidado-Integral-Api/public/qrcodes
 ```
 
 ### 11.2. Gerar chave SSH para o GitHub Actions
@@ -220,7 +220,7 @@ Crie estes `Secrets`:
 
 Opcional em `Variables`:
 
-- `VPS_PATH`: caminho de deploy, por padrao `/var/www/Cuidado-Integral-Api/certificados`
+- `VPS_PATH`: caminho de deploy, por padrao `/var/www/Cuidado-Integral-Api`
 
 ### 11.5. Primeiro deploy
 

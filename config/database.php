@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Configuração única do projeto:
- * - Prioriza variáveis de ambiente reais e depois `certificados/.env`.
+ * - Prioriza variáveis de ambiente reais e depois `.env`.
  * - CHAVE_SECRETA é usada para gerar o hash HMAC do certificado.
  */
 

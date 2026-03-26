@@ -43,21 +43,24 @@ jobs:
         run: |
           set -euo pipefail
           PORT="${VPS_PORT:-22}"
-          APP_DIR="${VPS_PATH:-/var/www/Cuidado-Integral-Api/certificados}"
+          APP_DIR="${VPS_PATH:-/var/www/Cuidado-Integral-Api}"
           ssh -i ~/.ssh/id_ed25519 -p "$PORT" "$VPS_USER@$VPS_HOST" "mkdir -p '$APP_DIR'"
           rsync -az --delete \
+            --filter='P .git/***' \
             --filter='P .env' \
             --filter='P public/qrcodes/***' \
+            --exclude '.git/' \
+            --exclude '.github/' \
             --exclude '.env' \
             --exclude 'vendor/' \
             --exclude 'public/qrcodes/' \
             -e "ssh -i ~/.ssh/id_ed25519 -p $PORT" \
-            certificados/ "$VPS_USER@$VPS_HOST:$APP_DIR/"
+            ./ "$VPS_USER@$VPS_HOST:$APP_DIR/"
 
       - name: Run remote deploy script
         run: |
           set -euo pipefail
           PORT="${VPS_PORT:-22}"
-          APP_DIR="${VPS_PATH:-/var/www/Cuidado-Integral-Api/certificados}"
+          APP_DIR="${VPS_PATH:-/var/www/Cuidado-Integral-Api}"
           ssh -i ~/.ssh/id_ed25519 -p "$PORT" "$VPS_USER@$VPS_HOST" \
             "chmod +x '$APP_DIR/deploy/vps/deploy.sh' && bash '$APP_DIR/deploy/vps/deploy.sh' '$APP_DIR'"

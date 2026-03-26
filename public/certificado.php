@@ -8,7 +8,7 @@ $autoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($autoload)) {
     header('Content-Type: text/plain; charset=utf-8');
     http_response_code(500);
-    echo "Dependências não instaladas. Rode Composer em /certificados.\n";
+    echo "Dependências não instaladas. Rode Composer na raiz do projeto.\n";
     echo "Depois instale/extensão GD (mPDF exige): sudo apt install php8.3-gd\n";
     exit;
 }
