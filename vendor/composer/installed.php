@@ -3,11 +3,11 @@
         'name' => 'instituto/certificados',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '96789a3026518d945be8ed1fd5541b450dc36579',
+        'reference' => '0ff7291b25cdd82f1a5451fb8ae8fa880b9a57c4',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => false,
+        'dev' => true,
     ),
     'versions' => array(
         'bacon/bacon-qr-code' => array(
@@ -40,7 +40,7 @@
         'instituto/certificados' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '96789a3026518d945be8ed1fd5541b450dc36579',
+            'reference' => '0ff7291b25cdd82f1a5451fb8ae8fa880b9a57c4',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -70,6 +70,15 @@
             'reference' => 'a633da6065e946cc491e1c962850344bb0bf3e78',
             'type' => 'library',
             'install_path' => __DIR__ . '/../mpdf/psr-log-aware-trait',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'mpdf/qrcode' => array(
+            'pretty_version' => 'v1.2.2',
+            'version' => '1.2.2.0',
+            'reference' => 'd4fa19117a7241c30ac84902b6236a02c7a3f268',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../mpdf/qrcode',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
