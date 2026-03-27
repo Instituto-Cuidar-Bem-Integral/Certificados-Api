@@ -102,7 +102,7 @@ final class CertificatePdfTemplate
 
     public static function createMpdf(): \Mpdf\Mpdf
     {
-        $tempDir = __DIR__ . '/../tmp';
+        $tempDir = sys_get_temp_dir() . '/certificado-mpdf';
         if (!is_dir($tempDir)) {
             mkdir($tempDir, 0777, true);
         }
