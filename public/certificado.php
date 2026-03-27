@@ -119,7 +119,7 @@ final class CertificatePdfTemplate
         $blue = '#4d90e6';
         $green = '#6c9b43';
 
-        $padding = $mm(9.0) . ' ' . $mm(16.0) . ' ' . $mm(10.0);
+        $padding = $mm(9.0) . ' ' . $mm(16.0) . ' ' . $mm(5.0);
         $logoWidth = $mm(27.0);
         $logoBottom = $mm(1.6);
         $institutionFont = $mm(3.5);
@@ -162,7 +162,7 @@ final class CertificatePdfTemplate
         $assinatura2Cargo = e((string)$data['assinatura_2_cargo']);
         $instituicao = e((string)$data['instituicao']);
         $logoSrc = trim((string)($data['logo_src'] ?? ''));
-        $qrSrc = trim((string)($data['qr_src'] ?? ''));
+        $validarUrl = trim((string)($data['validar_url'] ?? ''));
 
         $logoHtml = $logoSrc !== ''
             ? '<img style="width: ' . $logoWidth . '; height: auto; display: block; margin: 0 auto ' . $logoBottom . ';" src="' . e($logoSrc) . '" alt="Logo Instituto Cuidar Bem">'
@@ -209,7 +209,7 @@ final class CertificatePdfTemplate
                 <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
             </td>
             <td style="width: 30%; text-align: center; vertical-align: bottom;">
-                <img src="{$qrSrc}" alt="QR Code" style="width: {$qrSize}; height: {$qrSize};">
+                <barcode code="{$validarUrl}" type="QR" class="barcode" size="{$qrSize}" />
             </td>
             <td style="width: 35%; text-align: center; vertical-align: bottom;">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
@@ -405,23 +405,6 @@ $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : '
     . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 $validarUrl = $baseUrl . '/public/validar.php?h=' . rawurlencode($hash);
 
-$qrOutputDir = __DIR__ . '/qrcodes';
-$qrFilename = $hash . '.png';
-$qrFilePath = $qrOutputDir . '/' . $qrFilename;
-
-if (!file_exists($qrFilePath)) {
-    if (!is_dir($qrOutputDir)) {
-        mkdir($qrOutputDir, 0775, true);
-    }
-    $qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' . rawurlencode($validarUrl);
-    $qrImage = file_get_contents($qrApiUrl);
-    if ($qrImage !== false) {
-        file_put_contents($qrFilePath, $qrImage);
-    }
-}
-
-$qrSrc = file_exists($qrFilePath) ? str_replace(DIRECTORY_SEPARATOR, '/', $qrFilePath) : '';
-
 $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'nome' => $nome,
     'atividade' => $atividade,
@@ -438,7 +421,7 @@ $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'instituicao' => $instituicao,
     'codigo' => $codigo,
     'logo_src' => $logoSrc,
-    'qr_src' => $qrSrc,
+    'validar_url' => $validarUrl,
 ]);
 
 $html2 = CertificatePdfTemplate::buildDetailsPageHtml([
