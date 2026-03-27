@@ -102,6 +102,11 @@ final class CertificatePdfTemplate
 
     public static function createMpdf(): \Mpdf\Mpdf
     {
+        $tempDir = __DIR__ . '/../tmp';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
         return new \Mpdf\Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4-L',
@@ -109,6 +114,7 @@ final class CertificatePdfTemplate
             'margin_right' => 0,
             'margin_top' => 0,
             'margin_bottom' => 0,
+            'tempDir' => $tempDir,
         ]);
     }
 
@@ -199,18 +205,18 @@ final class CertificatePdfTemplate
             <td style="width: 49%; border-top: {$dateDividerBorder};"></td>
         </tr>
     </table>
-    <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(3.0)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse;">
+    <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(5.0)};">
         <tr>
-            <td style="width: 35%; text-align: center; vertical-align: bottom;">
+            <td style="width: 35%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
                 <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura1Nome}</div>
                 <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
             </td>
-            <td style="width: 30%; text-align: center; vertical-align: bottom;">
+            <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
                 <barcode code="{$validarUrl}" type="QR" size="0.8" />
             </td>
-            <td style="width: 35%; text-align: center; vertical-align: bottom;">
+            <td style="width: 35%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
                 <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura2Nome}</div>
                 <div style="font-size: {$signatureCargoFont};">{$assinatura2Cargo}</div>
