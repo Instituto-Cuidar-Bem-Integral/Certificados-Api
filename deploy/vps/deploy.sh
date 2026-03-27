@@ -25,6 +25,8 @@ umask 002
 git fetch origin
 git reset --hard origin/main
 
+sudo rm -rf vendor/mpdf/mpdf/tmp
+
 mkdir -p public/qrcodes tmp/mpdf
 
 composer install --no-dev --optimize-autoloader --no-interaction
