@@ -1,11 +1,14 @@
 <?php
 declare(strict_types=1);
 
-// Permite rodar em modo mock mesmo sem `vendor/` (composer).
 $autoload = __DIR__ . '/../vendor/autoload.php';
-if (is_file($autoload)) {
-    require $autoload;
+if (!is_file($autoload)) {
+    header('Content-Type: text/plain; charset=utf-8');
+    http_response_code(500);
+    echo "Dependências não instaladas. Rode Composer na raiz do projeto.\n";
+    exit;
 }
+require $autoload;
 
 require __DIR__ . '/../config/database.php';
 
@@ -16,38 +19,24 @@ use App\QrCode\QrCodeService;
 $hash = isset($_GET['h']) ? (string)$_GET['h'] : '';
 $hash = trim($hash);
 
-$useMock = isset($_GET['mock']) && (string)$_GET['mock'] === '1';
-$loadError = null;
 $cert = null;
 
-if ($useMock) {
-    require_once __DIR__ . '/../mocks/certificados.php';
-    $row = mock_certificado_by_hash($hash);
-    if ($row) {
-        // Cria um DTO “compatível” com a página sem depender do banco.
-        $cert = \App\Certificate\CertificateDTO::fromRow($row);
-    }
-} else {
-    try {
-        $repo = new CertificateRepository(db());
-        $qr = new QrCodeService(__DIR__ . '/qrcodes');
-        $service = new CertificateService(
-            $repo,
-            $qr,
-            (isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost'),
-            CHAVE_SECRETA
-        );
+try {
+    $repo = new CertificateRepository(db());
+    $qr = new QrCodeService(__DIR__ . '/qrcodes');
+    $service = new CertificateService(
+        $repo,
+        $qr,
+        (isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost'),
+        CHAVE_SECRETA
+    );
 
-        $cert = $service->buscarPorHash($hash);
-    } catch (Throwable $t) {
-        $loadError = $t->getMessage();
-        require_once __DIR__ . '/../mocks/certificados.php';
-        $row = mock_certificado_by_hash($hash);
-        if ($row) {
-            $cert = \App\Certificate\CertificateDTO::fromRow($row);
-            $useMock = true;
-        }
-    }
+    $cert = $service->buscarPorHash($hash);
+} catch (Throwable $t) {
+    header('Content-Type: text/plain; charset=utf-8');
+    http_response_code(500);
+    echo "Erro ao buscar certificado: " . $t->getMessage() . "\n";
+    exit;
 }
 
 function e(string $v): string
@@ -88,11 +77,6 @@ $codigo = ($cert !== null) ? substr($cert->hash, 0, 12) : '';
 <body>
 <main class="wrap">
     <section class="card">
-        <?php if ($loadError): ?>
-            <div style="margin:0 0 10px; font-size:12px; opacity:.75">
-                Fallback para mock (erro no banco): <?= e($loadError) ?> — force mock com <code>?mock=1</code>
-            </div>
-        <?php endif; ?>
         <?php if ($cert !== null): ?>
             <h1 class="title"><span class="ok">✅</span> Certificado Válido</h1>
             <div class="grid">

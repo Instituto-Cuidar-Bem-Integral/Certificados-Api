@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 // Gera PDF do certificado via mPDF.
-// Suporta modo mock: `?mock=1&h=<hash-do-mock>` (use hashes exibidos no listar mock).
 
 $autoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($autoload)) {
@@ -325,59 +324,47 @@ HTML;
 }
 
 $hash = isset($_GET['h']) ? trim((string)$_GET['h']) : '';
-$useMock = isset($_GET['mock']) && (string)$_GET['mock'] === '1';
 
 $row = null;
-$loadError = null;
 
-if ($useMock) {
-    require_once __DIR__ . '/../mocks/certificados.php';
-    $row = mock_certificado_by_hash($hash);
-} else {
-    try {
-        $repo = new CertificateRepository(db());
-        $dto = $repo->findByHash($hash);
-        if ($dto) {
-            $row = [
-                'id' => $dto->id,
-                'hash' => $dto->hash,
-                'nome' => $dto->nome,
-                'curso' => $dto->curso,
-                'data_emissao' => $dto->dataEmissao->format('Y-m-d'),
-                'carga_horaria' => $dto->cargaHoraria,
-                'atividade' => $dto->atividade,
-                'instrutor' => $dto->instrutor,
-                'criado_em' => $dto->criadoEm->format('Y-m-d H:i:s'),
-                // Campos “estendidos” podem ser preenchidos depois no banco.
-                'descricao' => null,
-                'atividades_lista' => [],
-                'competencias_lista' => [],
-                'cidade_uf' => 'Rio de Janeiro / RJ',
-                'periodo_inicio' => null,
-                'periodo_fim' => null,
-                'assinatura_1_nome' => 'Yuri Rocha de Jesus',
-                'assinatura_1_cargo' => 'Vice-Presidente Executivo',
-                'assinatura_2_nome' => 'Vitor de Souza Silva',
-                'assinatura_2_cargo' => 'Presidente Executivo',
-                'instituicao' => 'INSTITUTO CUIDAR BEM - INTEGRAL',
-            ];
-        }
-    } catch (Throwable $t) {
-        $loadError = $t->getMessage();
-        require_once __DIR__ . '/../mocks/certificados.php';
-        $row = mock_certificado_by_hash($hash);
-        $useMock = $row !== null;
+try {
+    $repo = new CertificateRepository(db());
+    $dto = $repo->findByHash($hash);
+    if ($dto) {
+        $row = [
+            'id' => $dto->id,
+            'hash' => $dto->hash,
+            'nome' => $dto->nome,
+            'curso' => $dto->curso,
+            'data_emissao' => $dto->dataEmissao->format('Y-m-d'),
+            'carga_horaria' => $dto->cargaHoraria,
+            'atividade' => $dto->atividade,
+            'instrutor' => $dto->instrutor,
+            'criado_em' => $dto->criadoEm->format('Y-m-d H:i:s'),
+            'descricao' => null,
+            'atividades_lista' => [],
+            'competencias_lista' => [],
+            'cidade_uf' => 'Rio de Janeiro / RJ',
+            'periodo_inicio' => null,
+            'periodo_fim' => null,
+            'assinatura_1_nome' => 'Yuri Rocha de Jesus',
+            'assinatura_1_cargo' => 'Vice-Presidente Executivo',
+            'assinatura_2_nome' => 'Vitor de Souza Silva',
+            'assinatura_2_cargo' => 'Presidente Executivo',
+            'instituicao' => 'INSTITUTO CUIDAR BEM - INTEGRAL',
+        ];
     }
+} catch (Throwable $t) {
+    header('Content-Type: text/plain; charset=utf-8');
+    http_response_code(500);
+    echo "Erro ao buscar certificado: " . $t->getMessage() . "\n";
+    exit;
 }
 
 if (!$row) {
     header('Content-Type: text/plain; charset=utf-8');
     http_response_code(404);
     echo "Certificado não encontrado.\n";
-    if ($loadError) {
-        echo "Erro no banco: {$loadError}\n";
-        echo "Tente: ?mock=1&h=<hash-do-mock>\n";
-    }
     exit;
 }
 
@@ -429,7 +416,7 @@ $html1 = CertificatePdfTemplate::buildFrontPageHtml([
 ]);
 
 $html2 = CertificatePdfTemplate::buildDetailsPageHtml([
-    'descricao' => $desc !== '' ? $desc : 'Descrição (mock): atividades e responsabilidades desempenhadas.',
+    'descricao' => $desc !== '' ? $desc : 'Descrição: atividades e responsabilidades desempenhadas.',
     'atividades_lista' => $atividadesLista,
     'competencias_lista' => $competenciasLista,
     'footer_contato' => 'contato@institutocuidarbem.com.br | +55 21 99777-9584',

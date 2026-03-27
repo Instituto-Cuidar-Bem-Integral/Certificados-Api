@@ -1,11 +1,14 @@
 <?php
 declare(strict_types=1);
 
-// Permite rodar em modo mock mesmo sem `vendor/` (composer).
 $autoload = __DIR__ . '/../vendor/autoload.php';
-if (is_file($autoload)) {
-    require $autoload;
+if (!is_file($autoload)) {
+    header('Content-Type: text/plain; charset=utf-8');
+    http_response_code(500);
+    echo "Dependências não instaladas. Rode Composer na raiz do projeto.\n";
+    exit;
 }
+require $autoload;
 
 require __DIR__ . '/../config/database.php';
 
@@ -20,7 +23,6 @@ function e(string $v): string
 
 $errors = [];
 $result = null;
-$useMock = isset($_GET['mock']) && (string)$_GET['mock'] === '1';
 
 $nome = '';
 $curso = '';
@@ -38,38 +40,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $instrutor = isset($_POST['instrutor']) ? (string)$_POST['instrutor'] : '';
 
     try {
-        if ($useMock) {
-            $hash = hash('sha256', 'mock-cadastro|' . $nome . '|' . $dataEmissao . '|' . microtime(true));
-            $validarUrl = '../public/validar.php?h=' . rawurlencode($hash) . '&mock=1';
-            $pdfUrl = '../public/certificado.php?h=' . rawurlencode($hash) . '&mock=1';
+        $repo = new CertificateRepository(db());
+        $qr = new QrCodeService(__DIR__ . '/../public/qrcodes');
+        $service = new CertificateService(
+            $repo,
+            $qr,
+            (isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost'),
+            CHAVE_SECRETA
+        );
 
-            $result = [
-                'hash' => $hash,
-                'id' => 0,
-                'qr_path' => '(mock) não gerado',
-                'validar_url' => $validarUrl,
-                'pdf_url' => $pdfUrl,
-            ];
-        } else {
-            $repo = new CertificateRepository(db());
-            $qr = new QrCodeService(__DIR__ . '/../public/qrcodes');
-            $service = new CertificateService(
-                $repo,
-                $qr,
-                (isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost'),
-                CHAVE_SECRETA
-            );
-
-            $result = $service->cadastrar(
-                $nome,
-                $curso !== '' ? $curso : null,
-                $dataEmissao,
-                $cargaHoraria !== '' ? $cargaHoraria : null,
-                $atividade !== '' ? $atividade : null,
-                $instrutor !== '' ? $instrutor : null,
-            );
-            $result['pdf_url'] = '../public/certificado.php?h=' . rawurlencode($result['hash']);
-        }
+        $result = $service->cadastrar(
+            $nome,
+            $curso !== '' ? $curso : null,
+            $dataEmissao,
+            $cargaHoraria !== '' ? $cargaHoraria : null,
+            $atividade !== '' ? $atividade : null,
+            $instrutor !== '' ? $instrutor : null,
+        );
+        $result['pdf_url'] = '../public/certificado.php?h=' . rawurlencode($result['hash']);
     } catch (Throwable $t) {
         $errors[] = $t->getMessage();
     }
@@ -109,11 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1 style="margin:0">Cadastrar certificado</h1>
         <nav style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
             <a href="listar.php">Listar certificados</a>
-            <?php if ($useMock): ?>
-                <span class="pill">MOCK</span>
-            <?php else: ?>
-                <a href="?mock=1">Entrar no mock</a>
-            <?php endif; ?>
         </nav>
     </div>
 
@@ -135,11 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="margin-top:6px">Link de validação: <a href="<?= e($result['validar_url']) ?>" target="_blank" rel="noopener">abrir validação</a></div>
             <div style="margin-top:6px">PDF: <a href="<?= e($result['pdf_url']) ?>" target="_blank" rel="noopener">gerar/abrir PDF</a></div>
             <div class="qr">
-                <?php if (!$useMock): ?>
-                    <img src="../public/qrcodes/<?= e($result['hash']) ?>.png" alt="QR Code">
-                <?php else: ?>
-                    <div style="width:140px;height:140px;border-radius:10px;border:1px dashed rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;opacity:.8">QR mock</div>
-                <?php endif; ?>
+                <img src="../public/qrcodes/<?= e($result['hash']) ?>.png" alt="QR Code">
                 <div>
                     <div>Arquivo: <code><?= e($result['qr_path']) ?></code></div>
                     <div style="opacity:.8;font-size:12px;margin-top:6px">O QR foi gerado em `public/qrcodes/{hash}.png`.</div>

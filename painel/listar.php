@@ -12,36 +12,13 @@ function e(string $v): string
     return htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-$useMock = isset($_GET['mock']) && (string)$_GET['mock'] === '1';
-$loadError = null;
-
-/**
- * @return array<int,CertificateDTO>
- */
-function mockItems(): array
-{
-    require_once __DIR__ . '/../mocks/certificados.php';
-    /** @var array<int,array<string,mixed>> $rows */
-    $rows = mock_certificados_rows();
-    return array_map(static fn(array $r) => CertificateDTO::fromRow($r), $rows);
-}
-
 $items = [];
-if ($useMock) {
-    $items = mockItems();
-} else {
-    try {
-        $repo = new CertificateRepository(db());
-        $items = $repo->listAll(300);
-        if (count($items) === 0) {
-            $items = mockItems();
-            $useMock = true;
-        }
-    } catch (Throwable $t) {
-        $items = mockItems();
-        $useMock = true;
-        $loadError = $t->getMessage();
-    }
+$loadError = null;
+try {
+    $repo = new CertificateRepository(db());
+    $items = $repo->listAll(300);
+} catch (Throwable $t) {
+    $loadError = $t->getMessage();
 }
 ?>
 <!doctype html>
@@ -72,22 +49,13 @@ if ($useMock) {
         <h1 style="margin:0">Certificados</h1>
         <nav style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
             <a href="cadastrar.php">Cadastrar novo</a>
-            <?php if ($useMock): ?>
-                <span class="pill">MOCK</span>
-            <?php endif; ?>
         </nav>
     </div>
 
     <?php if ($loadError): ?>
         <section class="card" style="border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.08)">
-            <strong>Usando mock</strong>
+            <strong>Erro ao carregar certificados</strong>
             <div class="muted" style="margin-top:6px">Falha ao carregar do banco: <?= e($loadError) ?></div>
-            <div class="muted" style="margin-top:6px">Para forçar mock: <code>?mock=1</code></div>
-        </section>
-    <?php elseif ($useMock): ?>
-        <section class="card" style="border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.08)">
-            <strong>Usando mock</strong>
-            <div class="muted" style="margin-top:6px">Para desativar, remova <code>?mock=1</code> e configure o banco.</div>
         </section>
     <?php endif; ?>
 
