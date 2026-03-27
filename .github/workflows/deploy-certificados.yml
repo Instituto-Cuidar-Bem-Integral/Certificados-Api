@@ -37,7 +37,6 @@ jobs:
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts || true
-          ssh -o ConnectTimeout=5 -i ~/.ssh/id_ed25519 -p "$PORT" "$VPS_USER@$VPS_HOST" "echo conectado"
           chmod 644 ~/.ssh/known_hosts
 
       - name: Sync application files
