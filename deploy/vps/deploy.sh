@@ -27,12 +27,9 @@ git reset --hard origin/main
 
 sudo rm -rf vendor
 
-mkdir -p public/qrcodes tmp/mpdf
+mkdir -p public/qrcodes
 
 composer install --no-dev --optimize-autoloader --no-interaction
-
-chown -R www-data:www-data tmp
-chmod -R 775 tmp
 
 find public/qrcodes -type d -exec chmod 775 {} \;
 find public/qrcodes -type f -exec chmod 664 {} \;
