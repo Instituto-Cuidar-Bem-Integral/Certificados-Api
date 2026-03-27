@@ -168,7 +168,7 @@ final class CertificatePdfTemplate
 
         $bodyParts = ['Atuou como voluntária'];
         if ($atividade !== '') {
-            $bodyParts[] = 'na função de <span style="color: ' . $blue . '; font-weight: 700;">' . e($atividade) . '</span>';
+            $bodyParts[] = 'no curso de <span style="color: ' . $blue . '; font-weight: 700;">' . e($atividade) . '</span>';
         }
         if ($cargaHoraria !== '') {
             $bodyParts[] = 'com carga horária total de <span style="color: ' . $blue . '; font-weight: 700;">' . e($cargaHoraria) . ' horas</span>';
