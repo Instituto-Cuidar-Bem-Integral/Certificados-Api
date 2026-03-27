@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Painel Certificados</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b1220;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .lado {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .lado:last-child {
+            border-right: none;
+        }
+
+        .header {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- CADASTRAR -->
+    <div class="lado">
+        <div class="header">
+            <h2>cadastrar_certificados</h2>
+        </div>
+        <iframe src="cadastrar.php"></iframe>
+    </div>
+
+    <!-- LISTAR -->
+    <div class="lado">
+        <div class="header">
+            <h2>listar_certificados</h2>
+            <button onclick="atualizarLista()">Atualizar</button>
+        </div>
+        <iframe id="listaFrame" src="listar.php"></iframe>
+    </div>
+
+</div>
+
+<script>
+    function atualizarLista() {
+        const frame = document.getElementById('listaFrame');
+        frame.src = 'listar.php?' + new Date().getTime();
+    }
+</script>
+
+</body>
+</html>
