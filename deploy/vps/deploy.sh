@@ -21,11 +21,16 @@ if [ ! -f ".env" ]; then
 fi
 
 umask 002
-mkdir -p public/qrcodes
+
+git fetch origin
+git reset --hard origin/main
+
+mkdir -p public/qrcodes tmp
 
 composer install --no-dev --optimize-autoloader --no-interaction
 
 find public/qrcodes -type d -exec chmod 775 {} \;
 find public/qrcodes -type f -exec chmod 664 {} \;
+chmod 777 tmp
 
 echo "Deploy finalizado em $(date '+%Y-%m-%d %H:%M:%S')"

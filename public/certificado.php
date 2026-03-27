@@ -125,13 +125,13 @@ final class CertificatePdfTemplate
         $blue = '#4d90e6';
         $green = '#6c9b43';
 
-        $padding = $mm(9.0) . ' ' . $mm(16.0) . ' ' . $mm(5.0);
+        $padding = $mm(5.0) . ' ' . $mm(16.0) . ' ' . $mm(3.0);
         $logoWidth = $mm(27.0);
         $logoBottom = $mm(1.6);
         $institutionFont = $mm(3.5);
         $institutionSpacing = $mm(0.08);
         $titleFont = $mm(14.8);
-        $titleTop = $mm(3.4);
+        $titleTop = $mm(6.0);
         $titleDividerWidth = $mm(162.0);
         $titleDividerBorder = $mm(0.4) . ' solid ' . $green;
         $titleDividerMargin = $mm(1.1) . ' auto ' . $mm(1.2);
@@ -206,17 +206,17 @@ final class CertificatePdfTemplate
         </tr>
     </table>
     <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(5.0)};">
+    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(8.0)};">
         <tr>
-            <td style="width: 35%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
+            <td style="width: 33%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
                 <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura1Nome}</div>
                 <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
             </td>
-            <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
-                <barcode code="{$validarUrl}" type="QR" size="0.8" />
+            <td style="width: 34%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
+                <barcode code="{$validarUrl}" type="QR" size="1.2" />
             </td>
-            <td style="width: 35%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(4.0)};">
+            <td style="width: 33%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
                 <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura2Nome}</div>
                 <div style="font-size: {$signatureCargoFont};">{$assinatura2Cargo}</div>
