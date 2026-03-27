@@ -1,6 +1,6 @@
 # 🎓 Sistema de Certificados - Instituto Cuidar Bem
 
-Sistema web completo para gerenciamento e validação de certificados.
+Sistema web completo para gerenciamento e validação de certificados com interface SPA.
 
 ## 📋 Funcionalidades
 
@@ -9,7 +9,9 @@ Sistema web completo para gerenciamento e validação de certificados.
 - 🔍 **Validar certificados** - Verificação por hash único
 - 🗑️ **Excluir certificados** - Remoção segura
 - 📱 **QR Code** - Geração automática para validação
-- 🎨 **Interface moderna** - Design responsivo e elegante
+- 📄 **Relatório PDF** - Geração de certificados em PDF via mPDF
+- 🎨 **Interface SPA** - Single Page Application moderna
+- 🔧 **Configuração Nginx** - Otimizado para produção
 
 ## 🚀 Instalação
 
@@ -18,6 +20,7 @@ Sistema web completo para gerenciamento e validação de certificados.
 - PHP 8.1+
 - MySQL/MariaDB
 - Composer
+- Extensão GD (para mPDF)
 
 ### Passo 1: Clonar o repositório
 
@@ -53,6 +56,7 @@ DB_HOST=localhost
 DB_NAME=certificados
 DB_USER=root
 DB_PASS=sua_senha
+CERT_SECRET=sua_chave_secreta
 ```
 
 ### Passo 4: Iniciar servidor
@@ -67,19 +71,32 @@ Acesse: http://localhost:8080
 
 ```
 Cuidado-Integral-Api/
-├── index.php          # Página principal
-├── cadastrar.php      # Cadastro de certificados
-├── listar.php         # Listagem de certificados
-├── validar.php        # Validação de certificados
-├── api.php            # API REST
-├── sql/
-│   └── schema.sql     # Estrutura do banco
+├── index.html          # Página principal (SPA)
+├── api.php             # API REST
+├── pages/
+│   ├── cadastrar.php   # Formulário de cadastro
+│   ├── listar.php      # Listagem de certificados
+│   └── validar.php     # Validação por hash
+├── public/
+│   ├── certificado.php # Geração de PDF via mPDF
+│   ├── validar.php     # Validação pública
+│   └── assets/         # Imagens e recursos
+├── config/
+│   └── conexao.php     # Configuração de conexão
 ├── src/
 │   └── Certificate/
 │       ├── CertificateDTO.php
 │       ├── CertificateRepository.php
 │       └── CertificateService.php
-└── .env.example       # Configurações
+├── sql/
+│   └── schema.sql      # Estrutura do banco
+├── deploy/
+│   ├── nginx/
+│   │   └── certificados.conf  # Configuração Nginx
+│   └── vps/
+│       └── deploy.sh   # Script de deploy
+├── README.md           # Documentação
+└── .env.example        # Configurações
 ```
 
 ## 🔌 API Endpoints
@@ -114,26 +131,49 @@ GET /api.php?action=validate&hash=<hash_do_certificado>
 DELETE /api.php?action=delete&id=<id_do_certificado>
 ```
 
-## 🎨 Páginas
+### Gerar PDF do certificado
+```
+GET /public/certificado.php?h=<hash_do_certificado>
+```
 
-### 1. Página Principal (index.php)
-- Menu de navegação
-- Acesso rápido às funcionalidades
+## 🎨 Páginas (SPA)
 
-### 2. Cadastrar (cadastrar.php)
-- Formulário completo
-- Validação de campos
+### 1. Menu Principal (index.html)
+- Interface SPA com navegação dinâmica
+- Cards interativos para cada funcionalidade
+- Carregamento assíncrono das páginas
+
+### 2. Cadastrar (pages/cadastrar.php)
+- Formulário completo com validação
+- Formatação automática de CPF
 - Geração automática de hash
 
-### 3. Listar (listar.php)
+### 3. Listar (pages/listar.php)
 - Tabela de certificados
 - Busca por nome/curso/hash
 - Opções de visualização e exclusão
 
-### 4. Validar (validar.php)
+### 4. Validar (pages/validar.php)
 - Verificação por hash
 - Exibição de dados completos
 - QR Code para compartilhamento
+
+## 📄 Relatório PDF
+
+O sistema gera certificados em PDF profissional via mPDF:
+- Layout A4 paisagem
+- Design elegante com bordas
+- Logo da instituição
+- Assinaturas configuráveis
+- QR Code integrado
+
+## 🔧 Configuração Nginx
+
+Configuração otimizada para produção:
+- Roteamento SPA (fallback para index.html)
+- Cache de QR Codes (7 dias)
+- Proteção de arquivos sensíveis
+- FastCGI para PHP
 
 ## 🔒 Segurança
 
@@ -141,19 +181,24 @@ DELETE /api.php?action=delete&id=<id_do_certificado>
 - Validação de entrada de dados
 - Proteção contra SQL injection
 - CORS configurado
+- Chave secreta para hash HMAC
 
 ## 📱 Responsividade
 
 - Layout adaptativo para mobile
 - Interface otimizada para tablets
 - Experiência consistente em desktop
+- Navegação SPA fluida
 
 ## 🛠️ Tecnologias
 
 - **Backend**: PHP 8.3+
 - **Banco**: MySQL/MariaDB
-- **Frontend**: HTML5, CSS3, JavaScript
+- **Frontend**: HTML5, CSS3, JavaScript (SPA)
 - **API**: REST JSON
+- **PDF**: mPDF
+- **QR Code**: API pública
+- **Web Server**: Nginx
 
 ## 📞 Suporte
 

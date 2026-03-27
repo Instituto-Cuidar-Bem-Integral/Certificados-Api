@@ -13,37 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/config/conexao.php';
 
 use App\Certificate\CertificateRepository;
 use App\Certificate\CertificateDTO;
-use PDO;
 
-// Database configuration
-$dbHost = getenv('DB_HOST') ?: 'localhost';
-$dbName = getenv('DB_NAME') ?: 'certificados';
-$dbUser = getenv('DB_USER') ?: 'root';
-$dbPass = getenv('DB_PASS') ?: '';
-
-try {
-    $pdo = new PDO(
-        "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
-        $dbUser,
-        $dbPass,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]
-    );
-} catch (PDOException $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Erro de conexão com banco de dados: ' . $e->getMessage()
-    ]);
-    exit;
-}
-
-$repository = new CertificateRepository($pdo);
+$repository = new CertificateRepository(db());
 $action = $_GET['action'] ?? '';
 
 try {
@@ -61,7 +36,7 @@ try {
             break;
         
         case 'delete':
-            handleDelete($repository, $pdo);
+            handleDelete($repository);
             break;
         
         default:
@@ -196,7 +171,7 @@ function handleValidate(CertificateRepository $repository): void
     ]);
 }
 
-function handleDelete(CertificateRepository $repository, PDO $pdo): void
+function handleDelete(CertificateRepository $repository): void
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
         jsonResponse([
@@ -216,7 +191,7 @@ function handleDelete(CertificateRepository $repository, PDO $pdo): void
         return;
     }
     
-    $stmt = $pdo->prepare('DELETE FROM certificados WHERE id = :id');
+    $stmt = db()->prepare('DELETE FROM certificados WHERE id = :id');
     $stmt->execute([':id' => (int)$id]);
     
     if ($stmt->rowCount() > 0) {

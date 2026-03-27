@@ -3,38 +3,29 @@ set -euo pipefail
 
 APP_DIR="${1:-/var/www/Cuidado-Integral-Api}"
 
-echo "🚀 Iniciando deploy em: $APP_DIR"
+if ! command -v composer >/dev/null 2>&1; then
+    echo "Composer nao encontrado no servidor." >&2
+    exit 1
+fi
+
+if [ ! -d "$APP_DIR" ]; then
+    echo "Diretorio da aplicacao nao encontrado: $APP_DIR" >&2
+    exit 1
+fi
 
 cd "$APP_DIR"
 
-# Pull das últimas alterações
-echo "📥 Baixando atualizações..."
-git pull origin main
-
-# Instalar dependências
-echo "📦 Instalando dependências..."
-composer install --no-dev --optimize-autoloader
-
-# Configurar permissões
-echo "🔐 Configurando permissões..."
-chmod -R 755 "$APP_DIR"
-chown -R www-data:www-data "$APP_DIR"
-
-# Criar .env se não existir
-if [ ! -f .env ]; then
-    echo "⚙️ Criando arquivo .env..."
-    cp .env.example .env
-    echo "✏️ Configure o arquivo .env com suas credenciais!"
+if [ ! -f ".env" ]; then
+    echo "Arquivo .env nao encontrado em $APP_DIR" >&2
+    exit 1
 fi
 
-# Executar migrations se existir
-if [ -f sql/schema.sql ]; then echo "🗄️ Configurando banco de dados..."
-    mysql -u root -p < sql/schema.sql 2>/dev/null || echo "⚠️ Banco já existe ou erro na configuração"
-fi
+umask 002
+mkdir -p public/qrcodes
 
-# Reiniciar servidor web
-echo "🔄 Reiniciando servidor..."
-sudo systemctl reload nginx 2>/dev/null || sudo systemctl reload apache2 2>/dev/null || echo "⚠️ Servidor web não encontrado"
+composer install --no-dev --optimize-autoloader --no-interaction
 
-echo "✅ Deploy concluído com sucesso!"
-echo "🌐 Acesse: http://$(hostname -I | awk '{print $1}')"
+find public/qrcodes -type d -exec chmod 775 {} \;
+find public/qrcodes -type f -exec chmod 664 {} \;
+
+echo "Deploy finalizado em $(date '+%Y-%m-%d %H:%M:%S')"
