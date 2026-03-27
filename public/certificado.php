@@ -112,7 +112,10 @@ final class CertificatePdfTemplate
         ]);
     }
 
-    public static function buildFrontPageHtml(array $data): string
+    /**
+     * @return array{html: string, qr_url: string}
+     */
+    public static function buildFrontPageHtml(array $data): array
     {
         $mm = static fn(float $value): string => self::mm($value);
 
@@ -147,7 +150,6 @@ final class CertificatePdfTemplate
         $signatureMargin = '0 ' . $mm(9.0) . ' ' . $mm(0.8);
         $signatureNameFont = $mm(5.1);
         $signatureCargoFont = $mm(4.0);
-        $qrSize = $mm(28.0);
 
         $nome = e((string)$data['nome']);
         $cidadeUf = e((string)$data['cidade_uf']);
@@ -181,7 +183,8 @@ final class CertificatePdfTemplate
 
         $bodyHtml = implode(', ', $bodyParts) . ', contribuindo com as atividades institucionais do Instituto Cuidar Bem - Integral.';
 
-        return <<<HTML
+        return [
+            'html' => <<<HTML
 <div style="font-family: serif; color: #111; padding: {$padding}; box-sizing: border-box;">
     <div style="text-align: center;">
         {$logoHtml}
@@ -209,7 +212,6 @@ final class CertificatePdfTemplate
                 <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
             </td>
             <td style="width: 30%; text-align: center; vertical-align: bottom;">
-                <barcode code="{$validarUrl}" type="QR" class="barcode" size="{$qrSize}" />
             </td>
             <td style="width: 35%; text-align: center; vertical-align: bottom;">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
@@ -219,7 +221,9 @@ final class CertificatePdfTemplate
         </tr>
     </table>
 </div>
-HTML;
+HTML,
+            'qr_url' => $validarUrl,
+        ];
     }
 
     public static function buildDetailsPageHtml(array $data): string
@@ -405,7 +409,7 @@ $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : '
     . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 $validarUrl = $baseUrl . '/public/validar.php?h=' . rawurlencode($hash);
 
-$html1 = CertificatePdfTemplate::buildFrontPageHtml([
+$frontResult = CertificatePdfTemplate::buildFrontPageHtml([
     'nome' => $nome,
     'atividade' => $atividade,
     'carga_horaria' => $carga,
@@ -424,6 +428,9 @@ $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'validar_url' => $validarUrl,
 ]);
 
+$html1 = $frontResult['html'];
+$qrUrl = $frontResult['qr_url'];
+
 $html2 = CertificatePdfTemplate::buildDetailsPageHtml([
     'descricao' => $desc !== '' ? $desc : 'Descrição: atividades e responsabilidades desempenhadas.',
     'atividades_lista' => $atividadesLista,
@@ -436,6 +443,15 @@ try {
 
     $mpdf->SetTitle('Certificado - ' . $nome);
     $mpdf->WriteHTML($html1);
+
+    $pageWidth = CertificatePdfTemplate::PAGE_WIDTH_MM;
+    $pageHeight = CertificatePdfTemplate::PAGE_HEIGHT_MM;
+    $qrW = 25;
+    $qrX = ($pageWidth / 2) - ($qrW / 2);
+    $qrY = $pageHeight - 35;
+    $mpdf->SetXY($qrX, $qrY);
+    $mpdf->Write2DBarcode($qrUrl, 'QRCODE,M', $qrX, $qrY, $qrW, $qrW, null, ['suppress' => false]);
+
     drawCertificateBorder($mpdf);
     $mpdf->AddPage('L');
     $mpdf->WriteHTML($html2);
