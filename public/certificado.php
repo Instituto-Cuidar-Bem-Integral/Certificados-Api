@@ -408,7 +408,7 @@ $logoSrc = $logoPath ? str_replace(DIRECTORY_SEPARATOR, '/', $logoPath) : '';
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
     . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-$validarUrl = $baseUrl . '/public/validar.php?h=' . rawurlencode($hash);
+$validarUrl = $baseUrl . '/validar.php?h=' . rawurlencode($hash);
 
 $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'nome' => $nome,
