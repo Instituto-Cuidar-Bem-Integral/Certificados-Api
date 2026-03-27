@@ -12,7 +12,7 @@ final class CertificateRepository
     public function insert(
         string $hash,
         string $nome,
-        ?string $curso,
+        ?string $funcao,
         string $dataEmissao,
         ?string $cargaHoraria,
         ?string $atividade,
@@ -20,14 +20,14 @@ final class CertificateRepository
     ): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO certificados (hash, nome, curso, data_emissao, carga_horaria, atividade, instrutor)
-             VALUES (:hash, :nome, :curso, :data_emissao, :carga_horaria, :atividade, :instrutor)'
+            'INSERT INTO certificados (hash, nome, funcao, data_emissao, carga_horaria, atividade, instrutor)
+             VALUES (:hash, :nome, :funcao, :data_emissao, :carga_horaria, :atividade, :instrutor)'
         );
 
         $stmt->execute([
             ':hash' => $hash,
             ':nome' => $nome,
-            ':curso' => $curso,
+            ':funcao' => $funcao,
             ':data_emissao' => $dataEmissao,
             ':carga_horaria' => $cargaHoraria,
             ':atividade' => $atividade,

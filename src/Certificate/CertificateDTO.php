@@ -9,7 +9,7 @@ readonly class CertificateDTO
         public ?int $id,
         public string $hash,
         public string $nome,
-        public ?string $curso,
+        public ?string $funcao,
         public \DateTimeImmutable $dataEmissao,
         public ?string $cargaHoraria,
         public ?string $atividade,
