@@ -275,6 +275,11 @@
             color: white;
         }
 
+        .btn-pdf {
+            background: #28a745;
+            color: white;
+        }
+
         .btn-delete {
             background: #dc3545;
             color: white;
@@ -525,6 +530,7 @@
                     <td><span class="status-badge">Ativo</span></td>
                     <td>
                         <button class="action-btn btn-view" onclick="viewCertificate('${cert.hash_certificado}')">👁️ Ver</button>
+                        <button class="action-btn btn-pdf" onclick="openPdf('${cert.hash_certificado}')">📄 PDF</button>
                         <button class="action-btn btn-delete" onclick="deleteCertificate(${cert.id})">🗑️ Excluir</button>
                     </td>
                 </tr>
@@ -549,6 +555,11 @@
         function viewCertificate(hash) {
             // Abrir página de validação em nova aba
             window.open(`validar.php?hash=${hash}`, '_blank');
+        }
+
+        function openPdf(hash) {
+            // Abrir PDF do certificado em nova aba
+            window.open(`http://187.77.254.115/public/certificado.php?h=${hash}`, '_blank');
         }
 
         async function deleteCertificate(id) {
