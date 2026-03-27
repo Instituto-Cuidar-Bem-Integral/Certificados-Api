@@ -362,9 +362,9 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="nome_curso">📚 Nome do Curso *</label>
-                            <input type="text" id="nome_curso" name="nome_curso" required 
-                                   placeholder="Digite o nome do curso">
+                            <label for="nome_funcao">📚 Nome da Função *</label>
+                            <input type="text" id="nome_funcao" name="nome_funcao" required 
+                                   placeholder="Digite o nome da função">
                         </div>
 
                         <div class="form-group">
@@ -388,9 +388,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="descricao">📝 Descrição do Curso</label>
+                        <label for="descricao">📝 Descrição da Função</label>
                         <textarea id="descricao" name="descricao" 
-                                  placeholder="Descreva o conteúdo do curso..."></textarea>
+                                  placeholder="Descreva o conteúdo da função..."></textarea>
                     </div>
 
                     <div class="btn-container">
@@ -414,7 +414,7 @@
                 <h2 class="section-title">📋 Certificados Cadastrados</h2>
                 
                 <div class="search-bar">
-                    <input type="text" id="searchInput" placeholder="🔍 Buscar por nome, curso ou hash...">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar por nome, função ou hash...">
                     <button onclick="searchCertificates()">Buscar</button>
                 </div>
 
@@ -424,7 +424,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nome</th>
-                                <th>Curso</th>
+                                <th>Função</th>
                                 <th>Data</th>
                                 <th>Hash</th>
                                 <th>Status</th>
@@ -524,7 +524,7 @@
                 <tr>
                     <td>${cert.id}</td>
                     <td>${cert.nome_aluno}</td>
-                    <td>${cert.nome_curso}</td>
+                    <td>${cert.nome_funcao}</td>
                     <td>${formatDate(cert.data_conclusao)}</td>
                     <td class="hash-cell">${cert.hash_certificado}</td>
                     <td><span class="status-badge">Ativo</span></td>

@@ -331,8 +331,8 @@ function formatDate($dateString) {
                         </div>
 
                         <div class="info-item">
-                            <label>📚 Curso</label>
-                            <span><?php echo htmlspecialchars($certificate->curso ?? '-'); ?></span>
+                            <label>📚 Função</label>
+                            <span><?php echo htmlspecialchars($certificate->funcao ?? '-'); ?></span>
                         </div>
 
                         <div class="info-item">
@@ -415,7 +415,7 @@ function formatDate($dateString) {
             document.getElementById('infoMessage').classList.remove('show');
 
             document.getElementById('certNome').textContent = cert.nome_aluno || '-';
-            document.getElementById('certCurso').textContent = cert.nome_curso || '-';
+            document.getElementById('certCurso').textContent = cert.nome_funcao || '-';
             document.getElementById('certCarga').textContent = cert.carga_horaria ? `${cert.carga_horaria} horas` : '-';
             document.getElementById('certData').textContent = formatDate(cert.data_conclusao) || '-';
             document.getElementById('certInstrutor').textContent = cert.instrutor || '-';

@@ -19,7 +19,7 @@ final class CertificateService
      */
     public function cadastrar(
         string $nome,
-        ?string $curso,
+        ?string $funcao,
         string $dataEmissao,
         ?string $cargaHoraria,
         ?string $atividade,
@@ -27,7 +27,7 @@ final class CertificateService
     ): array
     {
         $nome = trim($nome);
-        $curso = $curso !== null ? trim($curso) : null;
+        $funcao = $funcao !== null ? trim($funcao) : null;
         $dataEmissao = trim($dataEmissao);
         $cargaHoraria = $cargaHoraria !== null ? trim($cargaHoraria) : null;
         $atividade = $atividade !== null ? trim($atividade) : null;
@@ -40,8 +40,8 @@ final class CertificateService
             throw new \InvalidArgumentException('Data de emissão inválida (use YYYY-MM-DD).');
         }
 
-        $hash = $this->gerarHash($nome, $curso, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
-        $id = $this->repo->insert($hash, $nome, $curso, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
+        $hash = $this->gerarHash($nome, $funcao, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
+        $id = $this->repo->insert($hash, $nome, $funcao, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
 
         $validarUrl = rtrim($this->baseUrlValidacao, '/') . '/public/validar.php?h=' . rawurlencode($hash);
         $qrPath = $this->qr->generatePng($validarUrl, $hash);
@@ -65,7 +65,7 @@ final class CertificateService
 
     private function gerarHash(
         string $nome,
-        ?string $curso,
+        ?string $funcao,
         string $dataEmissao,
         ?string $cargaHoraria,
         ?string $atividade,
@@ -76,7 +76,7 @@ final class CertificateService
         $nonce = bin2hex(random_bytes(16));
         $base = implode('|', [
             $nome,
-            $curso ?? '',
+            $funcao ?? '',
             $dataEmissao,
             $cargaHoraria ?? '',
             $atividade ?? '',
@@ -87,4 +87,3 @@ final class CertificateService
         return hash_hmac('sha256', $base, $this->secretKey);
     }
 }
-

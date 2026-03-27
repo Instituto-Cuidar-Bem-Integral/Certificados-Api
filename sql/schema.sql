@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS certificados (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   hash          VARCHAR(64) UNIQUE NOT NULL,
   nome          VARCHAR(150) NOT NULL,
-  curso         VARCHAR(150) NULL,
+  funcao        VARCHAR(150) NULL,
   data_emissao  DATE NOT NULL,
   carga_horaria VARCHAR(10) NULL,
   atividade     VARCHAR(150) NULL,

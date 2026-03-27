@@ -63,7 +63,7 @@ function handleList(CertificateRepository $repository): void
             'id' => $cert->id,
             'hash_certificado' => $cert->hash,
             'nome_aluno' => $cert->nome,
-            'nome_curso' => $cert->funcao ?? '',
+            'nome_funcao' => $cert->funcao ?? '',
             'carga_horaria' => $cert->cargaHoraria ?? '',
             'data_conclusao' => $cert->dataEmissao->format('Y-m-d'),
             'instrutor' => $cert->instrutor ?? '',
@@ -100,7 +100,7 @@ function handleCreate(CertificateRepository $repository): void
     }
     
     // Validate required fields
-    $required = ['nome_aluno', 'cpf', 'nome_curso', 'carga_horaria', 'data_conclusao', 'instrutor'];
+    $required = ['nome_aluno', 'cpf', 'nome_funcao', 'carga_horaria', 'data_conclusao', 'instrutor'];
     foreach ($required as $field) {
         if (empty($data[$field])) {
             jsonResponse([
@@ -112,13 +112,13 @@ function handleCreate(CertificateRepository $repository): void
     }
     
     // Generate hash
-    $hash = hash('sha256', $data['nome_aluno'] . $data['cpf'] . $data['nome_curso'] . time());
+    $hash = hash('sha256', $data['nome_aluno'] . $data['cpf'] . $data['nome_funcao'] . time());
     
     // Insert certificate
     $id = $repository->insert(
         $hash,
         $data['nome_aluno'],
-        $data['nome_curso'],
+        $data['nome_funcao'],
         $data['data_conclusao'],
         $data['carga_horaria'],
         $data['descricao'] ?? null,
@@ -161,7 +161,7 @@ function handleValidate(CertificateRepository $repository): void
             'id' => $certificate->id,
             'hash_certificado' => $certificate->hash,
             'nome_aluno' => $certificate->nome,
-            'nome_curso' => $certificate->funcao ?? '',
+            'nome_funcao' => $certificate->funcao ?? '',
             'carga_horaria' => $certificate->cargaHoraria ?? '',
             'data_conclusao' => $certificate->dataEmissao->format('Y-m-d'),
             'instrutor' => $certificate->instrutor ?? '',

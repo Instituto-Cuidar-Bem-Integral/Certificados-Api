@@ -137,16 +137,17 @@ final class CertificatePdfTemplate
         $bodyFont = $mm(4.65);
         $bodyLine = $mm(6.6);
         $bodySide = $mm(6.0);
-        $bodyBottom = $mm(4.0);
+        $bodyBottom = $mm(2.5);
         $dateDividerWidth = $mm(122.0);
         $dateDividerBorder = $mm(0.4) . ' solid ' . $green;
-        $dateDividerBottom = $mm(2.6);
+        $dateDividerBottom = $mm(2.0);
         $dateFont = $mm(4.7);
-        $dateBottom = $mm(15.0);
+        $dateBottom = $mm(8.0);
         $signatureLine = $mm(0.28) . ' solid #80ad5a';
-        $signatureMargin = '0 ' . $mm(9.0) . ' ' . $mm(1.6);
+        $signatureMargin = '0 ' . $mm(9.0) . ' ' . $mm(0.8);
         $signatureNameFont = $mm(5.1);
         $signatureCargoFont = $mm(4.0);
+        $qrSize = $mm(28.0);
 
         $nome = e((string)$data['nome']);
         $cidadeUf = e((string)$data['cidade_uf']);
@@ -161,6 +162,7 @@ final class CertificatePdfTemplate
         $assinatura2Cargo = e((string)$data['assinatura_2_cargo']);
         $instituicao = e((string)$data['instituicao']);
         $logoSrc = trim((string)($data['logo_src'] ?? ''));
+        $qrSrc = trim((string)($data['qr_src'] ?? ''));
 
         $logoHtml = $logoSrc !== ''
             ? '<img style="width: ' . $logoWidth . '; height: auto; display: block; margin: 0 auto ' . $logoBottom . ';" src="' . e($logoSrc) . '" alt="Logo Instituto Cuidar Bem">'
@@ -168,7 +170,7 @@ final class CertificatePdfTemplate
 
         $bodyParts = ['Atuou como voluntária'];
         if ($atividade !== '') {
-            $bodyParts[] = 'no curso de <span style="color: ' . $blue . '; font-weight: 700;">' . e($atividade) . '</span>';
+            $bodyParts[] = 'na função de <span style="color: ' . $blue . '; font-weight: 700;">' . e($atividade) . '</span>';
         }
         if ($cargaHoraria !== '') {
             $bodyParts[] = 'com carga horária total de <span style="color: ' . $blue . '; font-weight: 700;">' . e($cargaHoraria) . ' horas</span>';
@@ -198,19 +200,21 @@ final class CertificatePdfTemplate
             <td style="width: 49%; border-top: {$dateDividerBorder};"></td>
         </tr>
     </table>
-    <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$dateBottom};">{$cidadeUf}, {$dataExtenso}</div>
+    <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(3.0)};">{$cidadeUf}, {$dataExtenso}</div>
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
-            <td style="width: 39%; text-align: center; vertical-align: top;">
-                <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
-                <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura2Nome}</div>
-                <div style="font-size: {$signatureCargoFont};">{$assinatura2Cargo}</div>
-            </td>
-            <td style="width: 22%;"></td>
-            <td style="width: 39%; text-align: center; vertical-align: top;">
+            <td style="width: 35%; text-align: center; vertical-align: bottom;">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
                 <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura1Nome}</div>
                 <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
+            </td>
+            <td style="width: 30%; text-align: center; vertical-align: bottom;">
+                <img src="{$qrSrc}" alt="QR Code" style="width: {$qrSize}; height: {$qrSize};">
+            </td>
+            <td style="width: 35%; text-align: center; vertical-align: bottom;">
+                <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
+                <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura2Nome}</div>
+                <div style="font-size: {$signatureCargoFont};">{$assinatura2Cargo}</div>
             </td>
         </tr>
     </table>
@@ -335,7 +339,7 @@ try {
             'id' => $dto->id,
             'hash' => $dto->hash,
             'nome' => $dto->nome,
-            'curso' => $dto->curso,
+            'funcao' => $dto->funcao,
             'data_emissao' => $dto->dataEmissao->format('Y-m-d'),
             'carga_horaria' => $dto->cargaHoraria,
             'atividade' => $dto->atividade,
@@ -374,7 +378,7 @@ $dataExtenso = formatDateLongPtBr($dataEmissao);
 $codigo = substr((string)$row['hash'], 0, 12);
 
 $nome = (string)$row['nome'];
-$curso = (string)($row['curso'] ?? '');
+$funcao = (string)($row['funcao'] ?? '');
 $atividade = (string)($row['atividade'] ?? '');
 $carga = (string)($row['carga_horaria'] ?? '');
 $instrutor = (string)($row['instrutor'] ?? '');
@@ -397,6 +401,27 @@ $ass2Cargo = (string)($row['assinatura_2_cargo'] ?? '');
 $logoPath = realpath(__DIR__ . '/assets/logo-instituto-cuidar-bem.png');
 $logoSrc = $logoPath ? str_replace(DIRECTORY_SEPARATOR, '/', $logoPath) : '';
 
+$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+    . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+$validarUrl = $baseUrl . '/public/validar.php?h=' . rawurlencode($hash);
+
+$qrOutputDir = __DIR__ . '/qrcodes';
+$qrFilename = $hash . '.png';
+$qrFilePath = $qrOutputDir . '/' . $qrFilename;
+
+if (!file_exists($qrFilePath)) {
+    if (!is_dir($qrOutputDir)) {
+        mkdir($qrOutputDir, 0775, true);
+    }
+    $qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' . rawurlencode($validarUrl);
+    $qrImage = file_get_contents($qrApiUrl);
+    if ($qrImage !== false) {
+        file_put_contents($qrFilePath, $qrImage);
+    }
+}
+
+$qrSrc = file_exists($qrFilePath) ? str_replace(DIRECTORY_SEPARATOR, '/', $qrFilePath) : '';
+
 $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'nome' => $nome,
     'atividade' => $atividade,
@@ -413,6 +438,7 @@ $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'instituicao' => $instituicao,
     'codigo' => $codigo,
     'logo_src' => $logoSrc,
+    'qr_src' => $qrSrc,
 ]);
 
 $html2 = CertificatePdfTemplate::buildDetailsPageHtml([

@@ -114,7 +114,7 @@ Content-Type: application/json
 {
   "nome_aluno": "João Silva",
   "cpf": "123.456.789-00",
-  "nome_curso": "Primeiros Socorros",
+  "nome_funcao": "Primeiros Socorros",
   "carga_horaria": "40",
   "data_conclusao": "2026-03-27",
   "instrutor": "Maria Santos"
@@ -150,7 +150,7 @@ GET /public/certificado.php?h=<hash_do_certificado>
 
 ### 3. Listar (pages/listar.php)
 - Tabela de certificados
-- Busca por nome/curso/hash
+- Busca por nome/função/hash
 - Opções de visualização e exclusão
 
 ### 4. Validar (pages/validar.php)

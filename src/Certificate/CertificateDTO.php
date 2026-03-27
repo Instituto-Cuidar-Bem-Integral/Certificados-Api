@@ -26,7 +26,7 @@ readonly class CertificateDTO
             isset($row['id']) ? (int)$row['id'] : null,
             (string)$row['hash'],
             (string)$row['nome'],
-            isset($row['curso']) ? (string)$row['curso'] : null,
+            isset($row['funcao']) ? (string)$row['funcao'] : null,
             new \DateTimeImmutable((string)$row['data_emissao']),
             isset($row['carga_horaria']) ? (string)$row['carga_horaria'] : null,
             isset($row['atividade']) ? (string)$row['atividade'] : null,
