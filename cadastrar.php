@@ -1,3 +1,6 @@
+<?php
+// Página de cadastro de certificados
+?>
 <div class="page-title">
     <h2>🎓 Novo Certificado</h2>
 </div>

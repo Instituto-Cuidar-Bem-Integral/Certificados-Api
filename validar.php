@@ -1,3 +1,6 @@
+<?php
+// Página de validação de certificados
+?>
 <div class="page-title">
     <h2>🔍 Verificar Autenticidade</h2>
 </div>

@@ -1,3 +1,6 @@
+<?php
+// Página de listagem de certificados
+?>
 <div class="page-title">
     <h2>📋 Certificados Cadastrados</h2>
 </div>
