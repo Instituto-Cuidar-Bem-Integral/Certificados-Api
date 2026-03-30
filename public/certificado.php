@@ -206,7 +206,7 @@ final class CertificatePdfTemplate
         </tr>
     </table>
     <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(26.0)};">
+    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(35.0)};">
         <tr>
             <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
