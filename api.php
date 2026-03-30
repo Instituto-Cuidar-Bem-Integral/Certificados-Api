@@ -135,7 +135,7 @@ function handleCreate(CertificateRepository $repository): void
 
 function handleValidate(CertificateRepository $repository): void
 {
-    $hash = $_GET['hash'] ?? '';
+    $hash = $_GET['h'] ?? '';
     
     if (empty($hash)) {
         jsonResponse([
