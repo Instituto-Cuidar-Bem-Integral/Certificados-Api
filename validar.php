@@ -385,7 +385,7 @@ function e(string $v): string
 <body>
     <!-- Header -->
     <header class="header">
-        <img src="assets/logo-instituto-cuidar-bem.png" alt="Logo Instituto Cuidar Bem" class="header-logo">
+        <img src="public/assets/logo-instituto-cuidar-bem.png" alt="Logo Instituto Cuidar Bem" class="header-logo">
         <h1 class="header-title">VERIFICAR AUTENTICIDADE</h1>
         <p class="header-subtitle">Este QR Code foi gerado em conformidade com o</p>
     </header>

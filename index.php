@@ -554,7 +554,7 @@
 
         function viewCertificate(hash) {
             // Abrir página de validação em nova aba
-            window.open(`validar.php?hash=${hash}`, '_blank');
+            window.open(`validar.php?h=${hash}`, '_blank');
         }
 
         function openPdf(hash) {
