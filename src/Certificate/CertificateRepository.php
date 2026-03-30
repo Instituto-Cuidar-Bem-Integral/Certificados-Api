@@ -39,9 +39,19 @@ final class CertificateRepository
 
     public function findByHash(string $hash): ?CertificateDTO
     {
+        // Debug: Log da query
+        error_log("Executando query findByHash com hash: " . $hash);
+        
         $stmt = $this->pdo->prepare('SELECT * FROM certificados WHERE hash = :hash LIMIT 1');
         $stmt->execute([':hash' => $hash]);
         $row = $stmt->fetch();
+
+        // Debug: Log do resultado
+        if ($row) {
+            error_log("Certificado encontrado no banco: " . json_encode($row));
+        } else {
+            error_log("Nenhum certificado encontrado para hash: " . $hash);
+        }
 
         if (!$row) {
             return null;

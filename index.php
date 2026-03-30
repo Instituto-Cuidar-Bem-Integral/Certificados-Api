@@ -554,12 +554,12 @@
 
         function viewCertificate(hash) {
             // Abrir página de validação em nova aba
-            window.open(`validar.php?h=${hash}`, '_blank');
+            window.open(`validar.php?h=${encodeURIComponent(hash)}`, '_blank');
         }
 
         function openPdf(hash) {
             // Abrir PDF do certificado em nova aba
-            window.open(`http://187.77.254.115/public/certificado.php?h=${hash}`, '_blank');
+            window.open(`public/certificado.php?h=${encodeURIComponent(hash)}`, '_blank');
         }
 
         async function deleteCertificate(id) {
