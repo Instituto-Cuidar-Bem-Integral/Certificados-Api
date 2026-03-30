@@ -12,24 +12,13 @@ $certificate = null;
 $error = null;
 $isValid = false;
 
-// Debug: Log do hash recebido
-error_log("Hash recebido: " . $hash);
-
 if ($hash !== '') {
     try {
         $repo = new CertificateRepository(db());
         $certificate = $repo->findByHash($hash);
         $isValid = $certificate !== null;
-        
-        // Debug: Log do resultado
-        if ($certificate) {
-            error_log("Certificado encontrado: " . $certificate->nome);
-        } else {
-            error_log("Certificado NÃO encontrado para hash: " . $hash);
-        }
     } catch (Throwable $t) {
         $error = 'Erro ao buscar certificado: ' . $t->getMessage();
-        error_log("Erro ao buscar certificado: " . $t->getMessage());
     }
 }
 
