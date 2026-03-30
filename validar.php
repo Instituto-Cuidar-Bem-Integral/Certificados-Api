@@ -7,7 +7,7 @@ require_once __DIR__ . '/config/conexao.php';
 
 use App\Certificate\CertificateRepository;
 
-$hash = isset($_GET['hash']) ? trim((string)$_GET['hash']) : '';
+$hash = isset($_GET['h']) ? trim((string)$_GET['h']) : '';
 $certificate = null;
 $error = null;
 $isValid = false;
