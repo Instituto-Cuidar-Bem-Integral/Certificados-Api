@@ -125,7 +125,7 @@ final class CertificatePdfTemplate
         $blue = '#4d90e6';
         $green = '#6c9b43';
 
-        $padding = $mm(12.0) . ' ' . $mm(16.0) . ' ' . $mm(3.0);
+        $padding = $mm(18.0) . ' ' . $mm(16.0) . ' ' . $mm(3.0);
         $logoWidth = $mm(27.0);
         $logoBottom = $mm(1.6);
         $institutionFont = $mm(3.5);
@@ -206,7 +206,7 @@ final class CertificatePdfTemplate
         </tr>
     </table>
     <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(35.0)};">
+    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(45.0)};">
         <tr>
             <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
