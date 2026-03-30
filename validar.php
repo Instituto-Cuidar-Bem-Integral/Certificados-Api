@@ -12,14 +12,46 @@ $certificate = null;
 $error = null;
 $isValid = false;
 
+// Debug: Log do hash recebido
+error_log("=== DEBUG VALIDAR ===");
+error_log("Hash recebido: " . $hash);
+
 if ($hash !== '') {
     try {
-        $repo = new CertificateRepository(db());
+        // Debug: Verificar conexão com banco
+        error_log("Tentando conectar ao banco...");
+        $pdo = db();
+        error_log("Conexão estabelecida!");
+        
+        $repo = new CertificateRepository($pdo);
+        
+        // Debug: Verificar se a tabela existe
+        $stmt = $pdo->query("SHOW TABLES LIKE 'certificados'");
+        $tables = $stmt->fetchAll();
+        error_log("Tabelas encontradas: " . json_encode($tables));
+        
+        // Debug: Listar todos os certificados
+        $stmt = $pdo->query("SELECT id, hash, nome FROM certificados LIMIT 5");
+        $allCerts = $stmt->fetchAll();
+        error_log("Certificados no banco: " . json_encode($allCerts));
+        
+        // Debug: Buscar certificado específico
+        error_log("Buscando certificado com hash: " . $hash);
         $certificate = $repo->findByHash($hash);
-        $isValid = $certificate !== null;
+        
+        if ($certificate) {
+            error_log("✅ Certificado encontrado: " . $certificate->nome);
+            $isValid = true;
+        } else {
+            error_log("❌ Certificado NÃO encontrado para hash: " . $hash);
+        }
     } catch (Throwable $t) {
         $error = 'Erro ao buscar certificado: ' . $t->getMessage();
+        error_log("❌ ERRO: " . $t->getMessage());
+        error_log("Stack trace: " . $t->getTraceAsString());
     }
+} else {
+    error_log("Hash vazio!");
 }
 
 function formatDate(DateTimeInterface $date): string

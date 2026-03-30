@@ -206,7 +206,7 @@ final class CertificatePdfTemplate
         </tr>
     </table>
     <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(6.0)};">
+    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(16.0)};">
         <tr>
             <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
                 <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
@@ -347,7 +347,7 @@ try {
             'funcao' => $dto->funcao,
             'data_emissao' => $dto->dataEmissao->format('Y-m-d'),
             'carga_horaria' => $dto->cargaHoraria,
-            'atividade' => $dto->atividade,
+            'atividade' => $dto->funcao,
             'instrutor' => $dto->instrutor,
             'criado_em' => $dto->criadoEm->format('Y-m-d H:i:s'),
             'descricao' => null,
