@@ -466,8 +466,6 @@ function e(string $v): string
                     </div>
 
                     <div class="info-row">
-                        <span class="info-label">Instrutor</span>
-                        <span class="info-value"><?php echo e($certificate->instrutor ?? '-'); ?></span>
                     </div>
                 </div>
 

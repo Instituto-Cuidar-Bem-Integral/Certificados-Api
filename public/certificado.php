@@ -16,9 +16,33 @@ require __DIR__ . '/../config/conexao.php';
 
 use App\Certificate\CertificateRepository;
 
+$hash = isset($_GET['h']) ? trim((string)$_GET['h']) : '';
+if ($hash === '') {
+    header('Content-Type: text/plain; charset=utf-8');
+    http_response_code(400);
+    echo "Hash do certificado é obrigatório.\n";
+    exit;
+}
+
 function e(string $v): string
 {
     return htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function fileToDataUri(?string $path): string
+{
+    if ($path === null || !is_file($path)) {
+        return '';
+    }
+
+    $mime = mime_content_type($path) ?: 'image/png';
+    $contents = file_get_contents($path);
+
+    if ($contents === false) {
+        return '';
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($contents);
 }
 
 function formatDateLongPtBr(DateTimeInterface $date): string
@@ -43,62 +67,25 @@ function formatDateLongPtBr(DateTimeInterface $date): string
     return $date->format('j') . ' de ' . $month . ' de ' . $date->format('Y');
 }
 
-function drawCertificateCorner(\Mpdf\Mpdf $mpdf, float $x, float $y, float $dirX, float $dirY): void
-{
-    $outerLength = 11.0;
-    $innerOffset = 3.6;
-    $innerLength = 7.2;
-    $markerSize = 3.4;
-    $markerInset = 0.9;
-    $markerCore = 1.4;
 
-    $mpdf->SetLineWidth(0.7);
-    $mpdf->Line($x, $y, $x + ($outerLength * $dirX), $y);
-    $mpdf->Line($x, $y, $x, $y + ($outerLength * $dirY));
-
-    $innerX = $x + ($innerOffset * $dirX);
-    $innerY = $y + ($innerOffset * $dirY);
-
-    $mpdf->SetLineWidth(0.22);
-    $mpdf->Line($innerX, $innerY, $innerX + ($innerLength * $dirX), $innerY);
-    $mpdf->Line($innerX, $innerY, $innerX, $innerY + ($innerLength * $dirY));
-
-    $markerX = $dirX > 0 ? $x : $x - $markerSize;
-    $markerY = $dirY > 0 ? $y : $y - $markerSize;
-
-    $mpdf->SetFillColor(29, 95, 147);
-    $mpdf->Rect($markerX, $markerY, $markerSize, $markerSize, 'F');
-    $mpdf->SetFillColor(255, 255, 255);
-    $mpdf->Rect($markerX + $markerInset, $markerY + $markerInset, $markerCore, $markerCore, 'F');
-}
-
-function drawCertificateBorder(\Mpdf\Mpdf $mpdf): void
-{
-    $pageWidth = CertificatePdfTemplate::PAGE_WIDTH_MM;
-    $pageHeight = CertificatePdfTemplate::PAGE_HEIGHT_MM;
-    $outerInset = 8.0;
-    $innerInset = 11.8;
-    $blue = [29, 95, 147];
-
-    $mpdf->SetDrawColor($blue[0], $blue[1], $blue[2]);
-    $mpdf->SetFillColor($blue[0], $blue[1], $blue[2]);
-
-    $mpdf->SetLineWidth(0.7);
-    $mpdf->Rect($outerInset, $outerInset, $pageWidth - ($outerInset * 2), $pageHeight - ($outerInset * 2));
-
-    $mpdf->SetLineWidth(0.22);
-    $mpdf->Rect($innerInset, $innerInset, $pageWidth - ($innerInset * 2), $pageHeight - ($innerInset * 2));
-
-    drawCertificateCorner($mpdf, 5.8, 5.8, 1.0, 1.0);
-    drawCertificateCorner($mpdf, $pageWidth - 5.8, 5.8, -1.0, 1.0);
-    drawCertificateCorner($mpdf, 5.8, $pageHeight - 5.8, 1.0, -1.0);
-    drawCertificateCorner($mpdf, $pageWidth - 5.8, $pageHeight - 5.8, -1.0, -1.0);
-}
-
+/**
+ * Template do certificado no novo modelo (conforme PDF de referência).
+ * Design limpo sem borda decorativa azul.
+ */
 final class CertificatePdfTemplate
 {
-    public const PAGE_WIDTH_MM = 297.0;
-    public const PAGE_HEIGHT_MM = 210.0;
+    public const REFERENCE_WIDTH_MM = 297.0;
+    public const REFERENCE_HEIGHT_MM = 210.0;
+    public const PAGE_WIDTH_MM = 254.0;
+    public const PAGE_HEIGHT_MM = 142.88;
+
+    // Cores do novo modelo
+    public const COLOR_PRIMARY = '#1a3c6e';    // Azul escuro principal
+    public const COLOR_ACCENT = '#2d6cb5';     // Azul destaque
+    public const COLOR_GREEN = '#4a8c3f';      // Verde institucional
+    public const COLOR_GREEN_LIGHT = '#6daa5d'; // Verde claro para linhas
+    public const COLOR_TEXT = '#1a1a1a';        // Texto principal
+    public const COLOR_TEXT_LIGHT = '#555555'; // Texto secundário
 
     public static function createMpdf(): \Mpdf\Mpdf
     {
@@ -109,7 +96,7 @@ final class CertificatePdfTemplate
 
         return new \Mpdf\Mpdf([
             'mode' => 'utf-8',
-            'format' => 'A4-L',
+            'format' => [self::PAGE_WIDTH_MM, self::PAGE_HEIGHT_MM],
             'margin_left' => 0,
             'margin_right' => 0,
             'margin_top' => 0,
@@ -118,224 +105,295 @@ final class CertificatePdfTemplate
         ]);
     }
 
+    /**
+     * Gera o HTML da página frontal do certificado (modelo novo).
+     */
     public static function buildFrontPageHtml(array $data): string
     {
         $mm = static fn(float $value): string => self::mm($value);
-
-        $blue = '#4d90e6';
-        $green = '#6c9b43';
-
-        $padding = $mm(18.0) . ' ' . $mm(16.0) . ' ' . $mm(3.0);
-        $logoWidth = $mm(27.0);
-        $logoBottom = $mm(1.6);
-        $institutionFont = $mm(3.5);
-        $institutionSpacing = $mm(0.08);
-        $titleFont = $mm(14.8);
-        $titleTop = $mm(6.0);
-        $titleDividerWidth = $mm(162.0);
-        $titleDividerBorder = $mm(0.4) . ' solid ' . $green;
-        $titleDividerMargin = $mm(1.1) . ' auto ' . $mm(1.2);
-        $subtitleFont = $mm(4.35);
-        $nameFont = $mm(8.3);
-        $nameBottom = $mm(0.6);
-        $nameDividerWidth = $mm(124.0);
-        $nameDividerMargin = $mm(1.2) . ' auto ' . $mm(3.0);
-        $bodyFont = $mm(4.65);
-        $bodyLine = $mm(6.6);
-        $bodySide = $mm(6.0);
-        $bodyBottom = $mm(2.5);
-        $dateDividerWidth = $mm(122.0);
-        $dateDividerBorder = $mm(0.4) . ' solid ' . $green;
-        $dateDividerBottom = $mm(2.0);
-        $dateFont = $mm(4.7);
-        $dateBottom = $mm(8.0);
-        $signatureLine = $mm(0.28) . ' solid #80ad5a';
-        $signatureMargin = '0 ' . $mm(9.0) . ' ' . $mm(0.8);
-        $signatureNameFont = $mm(5.1);
-        $signatureCargoFont = $mm(4.0);
-
-        $nome = e((string)$data['nome']);
-        $cidadeUf = e((string)$data['cidade_uf']);
-        $dataExtenso = e((string)$data['data_extenso']);
-        $atividade = trim((string)($data['atividade'] ?? ''));
-        $cargaHoraria = trim((string)($data['carga_horaria'] ?? ''));
-        $periodoInicio = trim((string)($data['periodo_inicio_extenso'] ?? ''));
-        $periodoFim = trim((string)($data['periodo_fim_extenso'] ?? ''));
-        $assinatura1Nome = e((string)$data['assinatura_1_nome']);
-        $assinatura1Cargo = e((string)$data['assinatura_1_cargo']);
-        $assinatura2Nome = e((string)$data['assinatura_2_nome']);
-        $assinatura2Cargo = e((string)$data['assinatura_2_cargo']);
-        $instituicao = e((string)$data['instituicao']);
-        $logoSrc = trim((string)($data['logo_src'] ?? ''));
-        $validarUrl = trim((string)($data['validar_url'] ?? ''));
+        $sx = static fn(float $value): string => self::sx($value);
+        $sy = static fn(float $value): string => self::sy($value);
+        $pt = static fn(float $value): string => self::pt($value);
+        $qr = static fn(float $value): string => self::scaledNumber($value);
+        $nome = e((string)($data['nome'] ?? ''));
+        $funcao = e((string)($data['funcao'] ?? ''));
+        $horas = e((string)($data['horas'] ?? ''));
+        $cidade = e((string)($data['cidade'] ?? ''));
+        $dataEmissao = e((string)($data['data_emissao'] ?? ''));
+        $assinanteNome = e((string)($data['assinante_nome'] ?? ''));
+        $assinanteCargo = e((string)($data['assinante_cargo'] ?? ''));
+        $instrutorNome = e((string)($data['instrutor_nome'] ?? ''));
+        $instrutorCargo = e((string)($data['instrutor_cargo'] ?? ''));
+        $mostrarInstrutor = (bool)($data['mostrar_instrutor'] ?? false);
+        $qrUrl = e((string)($data['validar_url'] ?? ''));
+        $logoSrc = (string)($data['logo_src'] ?? '');
+        $sidebarSrc = (string)($data['sidebar_src'] ?? '');
 
         $logoHtml = $logoSrc !== ''
-            ? '<img style="width: ' . $logoWidth . '; height: auto; display: block; margin: 0 auto ' . $logoBottom . ';" src="' . e($logoSrc) . '" alt="Logo Instituto Cuidar Bem">'
+            ? '<img src="' . $logoSrc . '" alt="Logo Instituto Cuidar Bem Integral" style="width: ' . $sx(40.0) . '; height: auto; display: block; margin: 0 auto;">'
             : '';
-
-        $bodyParts = ['Atuou como voluntária'];
-        if ($atividade !== '') {
-            $bodyParts[] = 'na função de <span style="color: ' . $blue . '; font-weight: 700;">' . e($atividade) . '</span>';
-        }
-        if ($cargaHoraria !== '') {
-            $bodyParts[] = 'com carga horária total de <span style="color: ' . $blue . '; font-weight: 700;">' . e($cargaHoraria) . ' horas</span>';
-        }
-        if ($periodoInicio !== '' && $periodoFim !== '') {
-            $bodyParts[] = 'no período de <span style="color: ' . $blue . '; font-weight: 700;">' . e($periodoInicio) . '</span> a <span style="color: ' . $blue . '; font-weight: 700;">' . e($periodoFim) . '</span>';
+        $instrutorHtml = '';
+        if ($mostrarInstrutor && $instrutorNome !== '' && $instrutorCargo !== '') {
+            $instrutorHtml = '<div style="font-size: ' . $pt(12.0) . '; font-weight: bold; color: #4d4d4d; line-height: 1.15;">' . $instrutorNome . '</div>'
+                . '<div style="font-size: ' . $pt(10.5) . '; color: #666666; line-height: 1.15;">' . $instrutorCargo . '</div>';
         }
 
-        $bodyHtml = implode(', ', $bodyParts) . ', contribuindo com as atividades institucionais do Instituto Cuidar Bem - Integral.';
-
         return <<<HTML
-<div style="font-family: serif; color: #111; padding: {$padding}; box-sizing: border-box;">
-    <div style="text-align: center;">
-        {$logoHtml}
-        <div style="font-size: {$institutionFont}; font-weight: 700; color: {$blue}; letter-spacing: {$institutionSpacing};">{$instituicao}</div>
-    </div>
-    <div style="text-align: center; font-size: {$titleFont}; line-height: 1; margin-top: {$titleTop};">CERTIFICADO</div>
-    <div style="width: {$titleDividerWidth}; border-top: {$titleDividerBorder}; margin: {$titleDividerMargin};"></div>
-    <div style="text-align: center; font-family: sans-serif; font-size: {$subtitleFont}; font-weight: 700;">Certificamos que</div>
-    <div style="text-align: center; font-size: {$nameFont}; font-weight: 700; color: {$blue}; margin-bottom: {$nameBottom};">{$nome}</div>
-    <div style="width: {$nameDividerWidth}; border-top: {$titleDividerBorder}; margin: {$nameDividerMargin};"></div>
-    <div style="font-size: {$bodyFont}; line-height: {$bodyLine}; text-align: center; margin: 0 {$bodySide} {$bodyBottom};">{$bodyHtml}</div>
-    <table align="center" style="width: {$dateDividerWidth}; border-collapse: collapse; margin: 0 auto {$dateDividerBottom};">
-        <tr>
-            <td style="width: 49%; border-top: {$dateDividerBorder};"></td>
-            <td style="width: 2%; text-align: center; color: {$green}; font-size: {$mm(4.1)}; line-height: 0;">&#8226;</td>
-            <td style="width: 49%; border-top: {$dateDividerBorder};"></td>
-        </tr>
-    </table>
-    <div style="text-align: center; font-size: {$dateFont}; margin-bottom: {$mm(1.5)};">{$cidadeUf}, {$dataExtenso}</div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: {$mm(45.0)};">
-        <tr>
-            <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
-                <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
-                <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura1Nome}</div>
-                <div style="font-size: {$signatureCargoFont};">{$assinatura1Cargo}</div>
-            </td>
-            <td style="width: 40%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
-                <barcode code="{$validarUrl}" type="QR" size="1.8" />
-            </td>
-            <td style="width: 30%; text-align: center; vertical-align: bottom; padding-bottom: {$mm(2.0)};">
-                <div style="border-top: {$signatureLine}; margin: {$signatureMargin};"></div>
-                <div style="font-size: {$signatureNameFont}; font-weight: 700;">{$assinatura2Nome}</div>
-                <div style="font-size: {$signatureCargoFont};">{$assinatura2Cargo}</div>
-            </td>
-        </tr>
-    </table>
-</div>
-HTML;
-    }
-
-    public static function buildDetailsPageHtml(array $data): string
-    {
-        $mm = static fn(float $value): string => self::mm($value);
-
-        $atividadesHtml = self::buildListHtml(
-            $data['atividades_lista'] ?? [],
-            [
-                'Apoiar as rotinas do setor',
-                'Registrar atividades realizadas',
-                'Dar suporte em processos de recrutamento',
-                'Elaborar relatórios simples',
-                'Apoiar demandas administrativas do setor',
-            ]
-        );
-        $competenciasHtml = self::buildListHtml(
-            $data['competencias_lista'] ?? [],
-            [
-                'Organização e atenção aos detalhes',
-                'Comunicação interpessoal',
-                'Trabalho em equipe',
-                'Responsabilidade e comprometimento',
-                'Conhecimento básico de rotinas administrativas de RH',
-            ]
-        );
-
-        $padding = $mm(10.0) . ' ' . $mm(14.0) . ' ' . $mm(4.0);
-        $titleMargin = $mm(2.2) . ' 0 ' . $mm(5.4);
-        $descriptionFont = $mm(5.1);
-        $descriptionLine = $mm(7.4);
-        $descriptionMargin = '0 ' . $mm(4.3) . ' ' . $mm(8.6);
-        $contentLeft = $mm(2.0);
-        $labelGap = $mm(3.5);
-        $sectionGap = $mm(6.0);
-        $footerGap = $mm(20.0);
-        $footerLine = $mm(0.35) . ' solid #666';
-        $footerMargin = '0 ' . $mm(4.0) . ' 0';
-        $footerPaddingTop = $mm(2.4);
-        $footerFont = $mm(3.35);
-
-        $descricaoPill = self::buildBluePill('DESCRIÇÃO', 6.5, 10.6, true);
-        $atividadesPill = self::buildBluePill('ATIVIDADES', 5.4, 7.1);
-        $competenciasPill = self::buildBluePill('COMPETÊNCIAS', 5.4, 7.1);
-        $descricao = e((string)$data['descricao']);
-        $footerContato = e((string)$data['footer_contato']);
-
-        return <<<HTML
-<div style="font-family: serif; color: #111; padding: {$padding}; box-sizing: border-box;">
-    <div style="text-align: center; margin: {$titleMargin};">{$descricaoPill}</div>
-    <div style="font-size: {$descriptionFont}; line-height: {$descriptionLine}; text-align: center; margin: {$descriptionMargin};">{$descricao}</div>
-    <div style="width: 58%; margin-left: {$contentLeft};">
-        <div style="margin-bottom: {$labelGap};">{$atividadesPill}</div>
-        {$atividadesHtml}
-        <div style="height: {$sectionGap};"></div>
-        <div style="margin-bottom: {$labelGap};">{$competenciasPill}</div>
-        {$competenciasHtml}
-    </div>
-    <div style="height: {$footerGap};"></div>
-    <div style="border-top: {$footerLine}; margin: {$footerMargin}; padding-top: {$footerPaddingTop}; text-align: center; font-family: sans-serif; font-size: {$footerFont}; font-weight: 700;">{$footerContato}</div>
-</div>
-HTML;
-    }
-
-    private static function buildListHtml(array $items, array $fallbackItems): string
-    {
-        $mm = static fn(float $value): string => self::mm($value);
-        $list = $items !== [] ? $items : $fallbackItems;
-        $paddingLeft = $mm(5.6);
-        $fontSize = $mm(4.9);
-        $lineHeight = $mm(6.8);
-        $itemMargin = $mm(1.5);
-
-        $itemsHtml = implode('', array_map(
-            static fn($item): string => '<li style="margin: 0 0 ' . $itemMargin . ';">' . e((string)$item) . '</li>',
-            $list
-        ));
-
-        return <<<HTML
-<ul style="margin: 0; padding-left: {$paddingLeft}; font-size: {$fontSize}; line-height: {$lineHeight};">{$itemsHtml}</ul>
-HTML;
-    }
-
-    private static function buildBluePill(string $text, float $fontSizeMm, float $paddingXmm, bool $center = false): string
-    {
-        $mm = static fn(float $value): string => self::mm($value);
-        $align = $center ? ' align="center"' : '';
-        $fontSize = $mm($fontSizeMm);
-        $padding = $mm(1.1) . ' ' . $mm($paddingXmm);
-        $radius = $mm(4.0);
-        $label = e($text);
-
-        return <<<HTML
-<table{$align} style="border-collapse: separate;">
+<table style="width: {$mm(self::PAGE_WIDTH_MM)}; height: {$mm(self::PAGE_HEIGHT_MM)}; border-collapse: collapse; border-spacing: 0; background-color: #ffffff;">
     <tr>
-        <td style="font-family: serif; font-size: {$fontSize}; font-weight: 700; color: #fff; background: #4d90e6; padding: {$padding}; border-radius: {$radius};">{$label}</td>
+        <td style="
+            width: {$sx(67.0)};
+            height: {$mm(self::PAGE_HEIGHT_MM)};
+            padding: 0;
+            vertical-align: top;
+            background-image: url({$sidebarSrc});
+            background-repeat: no-repeat;
+            background-position: left top;
+            background-image-resize: 6;
+        ">
+            <table style="width: {$sx(67.0)}; height: {$mm(self::PAGE_HEIGHT_MM)}; border-collapse: collapse;">
+                <tr>
+                    <td style="height: {$sy(14.0)};"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; padding: 0 {$sx(6.0)};">
+                        {$logoHtml}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="height: {$sy(42.0)};"></td>
+                </tr>
+                <tr>
+                    <td style="
+                        vertical-align: top;
+                        padding: 0 {$sx(10.0)} 0 {$sx(13.0)};
+                        color: #ffffff;
+                        font-family: dejavusans;
+                        font-size: {$pt(22.5)};
+                        line-height: 1.33;
+                    ">
+                        Instituto<br>
+                        Cuidar<br>
+                        Bem<br>
+                        Integral
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                </tr>
+            </table>
+        </td>
+        <td style="
+            width: {$sx(230.0)};
+            height: {$mm(self::PAGE_HEIGHT_MM)};
+            padding: {$sy(18.0)} {$sx(12.0)} {$sy(9.0)} {$sx(18.0)};
+            vertical-align: top;
+            background-color: #ffffff;
+            font-family: dejavusans;
+        ">
+            <table style="width: 100%; height: {$sy(183.0)}; border-collapse: collapse; border-spacing: 0;">
+                <tr>
+                    <td style="vertical-align: top;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="vertical-align: top;">
+                                    <div style="
+                                        color: #4d88db;
+                                        font-size: {$pt(42.0)};
+                                        line-height: 1;
+                                        font-weight: normal;
+                                    ">CERTIFICADO</div>
+                                </td>
+                                <td style="width: {$sx(40.0)}; text-align: right; vertical-align: top;">
+                                    <barcode code="{$qrUrl}" type="QR" size="{$qr(1.6)}" error="M" disableborder="1" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: {$sy(10.0)}; font-size: {$pt(13.5)}; color: #5c5c5c;">Certificamos que</td>
+                </tr>
+                <tr>
+                    <td style="padding-top: {$sy(4.0)}; font-size: {$pt(28.0)}; font-weight: bold; color: #75d54f;">{$nome}</td>
+                </tr>
+                <tr>
+                    <td style="
+                        padding-top: {$sy(9.0)};
+                        padding-right: {$sx(2.0)};
+                        font-size: {$pt(14.8)};
+                        color: #5a5a5a;
+                        line-height: 1.15;
+                        text-align: left;
+                    ">
+                        <div style="width: {$sx(170.0)};">
+                            Atuou como voluntário(a) na função de {$funcao}, cumprindo carga horária total de {$horas}, contribuindo para as atividades institucionais do Instituto Cuidar Bem - Integral.
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: {$sy(11.0)}; font-size: {$pt(14.8)}; color: #5a5a5a;">{$cidade}, {$dataEmissao}.</td>
+                </tr>
+                <tr>
+                    <td style="height: {$sy(42.0)};"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 58%; text-align: left; vertical-align: bottom;">
+                                    <div style="width: {$sx(74.0)}; text-align: center;">
+                                        <div style="font-size: {$pt(12.0)}; font-weight: bold; color: #4d4d4d; line-height: 1.15;">{$assinanteNome}</div>
+                                        <div style="font-size: {$pt(10.5)}; color: #666666; line-height: 1.15;">{$assinanteCargo}</div>
+                                    </div>
+                                </td>
+                                <td style="width: 42%; text-align: center; vertical-align: bottom;">
+                                    {$instrutorHtml}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
     </tr>
 </table>
 HTML;
     }
 
-    private static function mm(float $value): string
+    /**
+     * Gera o HTML da página de detalhes (verso do certificado).
+     */
+    public static function buildDetailsPageHtml(array $data): string
+    {
+        $mm = static fn(float $value): string => self::mm($value);
+        $sx = static fn(float $value): string => self::sx($value);
+        $sy = static fn(float $value): string => self::sy($value);
+        $pt = static fn(float $value): string => self::pt($value);
+        $contentHtml = (string)($data['content_html'] ?? '');
+        $footerContato = e((string)($data['footer_contato'] ?? ''));
+        $backgroundSrc = (string)($data['background_src'] ?? '');
+
+        return <<<HTML
+<div style="
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: {$mm(self::PAGE_WIDTH_MM)};
+    height: {$mm(self::PAGE_HEIGHT_MM)};
+    background-image: url({$backgroundSrc});
+    background-repeat: no-repeat;
+    background-position: left top;
+    background-image-resize: 6;
+"></div>
+
+<div style="
+    position: absolute;
+    left: {$sx(6.0)};
+    top: {$sy(6.0)};
+    width: {$sx(285.0)};
+    height: {$sy(198.0)};
+    background-color: #ffffff;
+"></div>
+
+<div style="
+    position: absolute;
+    left: {$sx(18.0)};
+    top: {$sy(14.0)};
+    width: {$sx(261.0)};
+    text-align: center;
+    font-family: dejavusans;
+    font-size: {$pt(21.0)};
+    font-weight: bold;
+    color: #4d88db;
+">Principais atividades desenvolvidas</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(18.0)};
+    top: {$sy(44.0)};
+    right: {$sx(18.0)};
+    bottom: {$sy(24.0)};
+    font-family: dejavusans;
+">
+    {$contentHtml}
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(18.0)};
+    right: {$sx(18.0)};
+    bottom: {$sy(12.0)};
+    text-align: center;
+    font-family: dejavusans;
+    font-size: {$pt(10.0)};
+    color: #5d5d5d;
+">
+    {$footerContato}
+</div>
+HTML;
+    }
+
+    /**
+     * Gera HTML para lista de atividades.
+     */
+    public static function buildListHtml(array $items): string
+    {
+        if (empty($items)) {
+            return '<div style="font-size: ' . self::pt(10.5) . '; color: #666666;">Nenhuma atividade vinculada a este certificado.</div>';
+        }
+
+        $paddingLeft = self::sx(6.0);
+        $fontSize = self::pt(11.0);
+        $itemMargin = self::sy(2.0);
+        $bulletColor = self::COLOR_GREEN_LIGHT;
+
+        $itemsHtml = implode('', array_map(
+            static fn($item): string => '<li style="margin: 0 0 ' . $itemMargin . '; color: ' . self::COLOR_TEXT . '; list-style: none; position: relative; padding-left: ' . self::sx(5.0) . '; line-height: 1.45;"><span style="position: absolute; left: 0; color: ' . $bulletColor . '; font-weight: bold;">&#8226;</span>' . e((string)$item) . '</li>',
+            $items
+        ));
+
+        return '<ul style="margin: 0; padding-left: ' . $paddingLeft . '; font-size: ' . $fontSize . ';">' . $itemsHtml . '</ul>';
+    }
+
+    /**
+     * Converte valor para string com unidade mm.
+     */
+    public static function mm(float $value): string
     {
         return rtrim(rtrim(sprintf('%.2F', $value), '0'), '.') . 'mm';
     }
+
+    public static function pt(float $value): string
+    {
+        return rtrim(rtrim(sprintf('%.2F', $value * self::fontScale()), '0'), '.') . 'pt';
+    }
+
+    private static function sx(float $value): string
+    {
+        return self::mm($value * (self::PAGE_WIDTH_MM / self::REFERENCE_WIDTH_MM));
+    }
+
+    private static function sy(float $value): string
+    {
+        return self::mm($value * (self::PAGE_HEIGHT_MM / self::REFERENCE_HEIGHT_MM));
+    }
+
+    private static function scaledNumber(float $value): string
+    {
+        return rtrim(rtrim(sprintf('%.2F', $value * self::fontScale()), '0'), '.');
+    }
+
+    private static function fontScale(): float
+    {
+        return sqrt(
+            (self::PAGE_WIDTH_MM / self::REFERENCE_WIDTH_MM)
+            * (self::PAGE_HEIGHT_MM / self::REFERENCE_HEIGHT_MM)
+        );
+    }
 }
 
-$hash = isset($_GET['h']) ? trim((string)$_GET['h']) : '';
-
 $row = null;
-
 try {
     $repo = new CertificateRepository(db());
     $dto = $repo->findByHash($hash);
@@ -347,12 +405,11 @@ try {
             'funcao' => $dto->funcao,
             'data_emissao' => $dto->dataEmissao->format('Y-m-d'),
             'carga_horaria' => $dto->cargaHoraria,
+            'has_assinatura_adicional' => $dto->hasAssinaturaAdicional ?? 0,
             'atividade' => $dto->funcao,
-            'instrutor' => $dto->instrutor,
             'criado_em' => $dto->criadoEm->format('Y-m-d H:i:s'),
             'descricao' => null,
             'atividades_lista' => [],
-            'competencias_lista' => [],
             'cidade_uf' => 'Rio de Janeiro / RJ',
             'periodo_inicio' => null,
             'periodo_fim' => null,
@@ -386,12 +443,9 @@ $nome = (string)$row['nome'];
 $funcao = (string)($row['funcao'] ?? '');
 $atividade = (string)($row['atividade'] ?? '');
 $carga = (string)($row['carga_horaria'] ?? '');
-$instrutor = (string)($row['instrutor'] ?? '');
 $instituicao = (string)($row['instituicao'] ?? 'INSTITUTO CUIDAR BEM - INTEGRAL');
 $cidadeUf = (string)($row['cidade_uf'] ?? '');
 $desc = (string)($row['descricao'] ?? '');
-$atividadesLista = is_array($row['atividades_lista'] ?? null) ? $row['atividades_lista'] : [];
-$competenciasLista = is_array($row['competencias_lista'] ?? null) ? $row['competencias_lista'] : [];
 $periodoInicioExtenso = !empty($row['periodo_inicio'])
     ? formatDateLongPtBr(new DateTimeImmutable((string)$row['periodo_inicio']))
     : '';
@@ -399,40 +453,109 @@ $periodoFimExtenso = !empty($row['periodo_fim'])
     ? formatDateLongPtBr(new DateTimeImmutable((string)$row['periodo_fim']))
     : '';
 
+$hasAssinaturaAdicional = (int)($row['has_assinatura_adicional'] ?? 0);
+
+$atividadesLista = is_array($row['atividades_lista'] ?? null) ? $row['atividades_lista'] : [];
+try {
+    $stmt = db()->prepare(
+        'SELECT ca.atividade 
+         FROM certificados_atividades_grupo cag
+         INNER JOIN certificados_atividades ca ON ca.id = cag.id_cer_atividade
+         WHERE cag.id_certificado = :id_certificado
+         ORDER BY ca.id'
+    );
+    $stmt->execute([':id_certificado' => (int)$row['id']]);
+    $atividadesLista = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Throwable $e) {
+    // Se ocorrer erro, continua sem atividades
+}
+
+// Buscar assinatura adicional se habilitada
+$assinaturaAdicional = null;
+if ($hasAssinaturaAdicional) {
+    try {
+        $stmt = db()->prepare(
+            'SELECT nome_instrutor, funcao, numero_registro 
+             FROM assinatura_adicional 
+             WHERE id_certificado = :id_certificado LIMIT 1'
+        );
+        $stmt->execute([':id_certificado' => (int)$row['id']]);
+        $assinaturaAdicional = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    } catch (Throwable $e) {
+        // Se ocorrer erro, continua sem assinatura adicional
+    }
+}
+
 $ass1Nome = (string)($row['assinatura_1_nome'] ?? '');
 $ass1Cargo = (string)($row['assinatura_1_cargo'] ?? '');
 $ass2Nome = (string)($row['assinatura_2_nome'] ?? '');
 $ass2Cargo = (string)($row['assinatura_2_cargo'] ?? '');
-$logoPath = realpath(__DIR__ . '/assets/logo-instituto-cuidar-bem.png');
-$logoSrc = $logoPath ? str_replace(DIRECTORY_SEPARATOR, '/', $logoPath) : '';
+$logoPath = realpath(__DIR__ . '/assets/logo-instituto-cuidar-bem-white.png')
+    ?: realpath(__DIR__ . '/assets/logo-instituto-cuidar-bem.png');
+$logoSrc = fileToDataUri($logoPath ?: null);
+$sidebarSrc = fileToDataUri(realpath(__DIR__ . '/assets/sidebar_gradient.png') ?: null);
+$page2BgSrc = fileToDataUri(realpath(__DIR__ . '/assets/page2_bg_gradient.png') ?: null);
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
     . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-$validarUrl = $baseUrl . '/validar.php?h=' . rawurlencode($hash);
+$scriptName = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/Cuidado-Integral-Api/public/certificado.php'));
+$publicDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+$appBasePath = preg_replace('#/public$#', '', $publicDir) ?: '';
+$validarUrl = $baseUrl . $appBasePath . '/validar.php?h=' . rawurlencode($hash);
+
+// Dados para o template do certificado (novo modelo)
+$instrutorNome = (string)($row['instrutor_nome'] ?? '');
+$instrutorFuncao = (string)($row['instrutor_funcao'] ?? '');
+$instrutorRegistro = (string)($row['instrutor_registro'] ?? '');
+
+if ($hasAssinaturaAdicional && $assinaturaAdicional) {
+    $instrutorNome = (string)($assinaturaAdicional['nome_instrutor'] ?? '');
+    $instrutorFuncao = (string)($assinaturaAdicional['funcao'] ?? '');
+    $instrutorRegistro = (string)($assinaturaAdicional['numero_registro'] ?? '');
+}
+
+$cidadeExibicao = trim((string)preg_replace('/\s*\/\s*[A-Z]{2}$/u', '', $cidadeUf));
+if ($cidadeExibicao === '') {
+    $cidadeExibicao = $cidadeUf;
+}
+
+$cargaExibicao = trim($carga);
+if ($cargaExibicao !== '' && !preg_match('/hora/i', $cargaExibicao)) {
+    $cargaExibicao .= ' horas';
+}
+
+$detailsParts = [];
+if ($desc !== '') {
+    $detailsParts[] = '<div style="font-size: ' . CertificatePdfTemplate::pt(11.0) . '; line-height: 1.55; color: #5a5a5a;">' . nl2br(e($desc)) . '</div>';
+}
+if (!empty($atividadesLista)) {
+    $detailsParts[] = CertificatePdfTemplate::buildListHtml($atividadesLista);
+}
+if ($detailsParts === []) {
+    $detailsParts[] = '<div style="font-size: ' . CertificatePdfTemplate::pt(10.5) . '; color: #666666;">Nenhuma atividade vinculada a este certificado.</div>';
+}
+
+$detailsHtml = implode('', $detailsParts);
 
 $html1 = CertificatePdfTemplate::buildFrontPageHtml([
     'nome' => $nome,
-    'atividade' => $atividade,
-    'carga_horaria' => $carga,
-    'cidade_uf' => $cidadeUf,
-    'data_fmt' => $dataFmt,
-    'data_extenso' => $dataExtenso,
-    'periodo_inicio_extenso' => $periodoInicioExtenso,
-    'periodo_fim_extenso' => $periodoFimExtenso,
-    'assinatura_1_nome' => $ass1Nome,
-    'assinatura_1_cargo' => $ass1Cargo,
-    'assinatura_2_nome' => $ass2Nome,
-    'assinatura_2_cargo' => $ass2Cargo,
-    'instituicao' => $instituicao,
-    'codigo' => $codigo,
+    'funcao' => $funcao,
+    'horas' => $cargaExibicao,
+    'cidade' => $cidadeExibicao,
+    'data_emissao' => $dataExtenso,
     'logo_src' => $logoSrc,
+    'sidebar_src' => $sidebarSrc,
     'validar_url' => $validarUrl,
+    'instrutor_nome' => $instrutorNome,
+    'instrutor_cargo' => $instrutorFuncao,
+    'mostrar_instrutor' => $hasAssinaturaAdicional === 1,
+    'assinante_nome' => $ass1Nome !== '' ? $ass1Nome : 'Yuri Rocha de Jesus',
+    'assinante_cargo' => strtoupper($ass1Cargo !== '' ? $ass1Cargo : 'VICE-PRESIDENTE EXECUTIVO'),
 ]);
 
 $html2 = CertificatePdfTemplate::buildDetailsPageHtml([
-    'descricao' => $desc !== '' ? $desc : 'Descrição: atividades e responsabilidades desempenhadas.',
-    'atividades_lista' => $atividadesLista,
-    'competencias_lista' => $competenciasLista,
+    'background_src' => $page2BgSrc,
+    'content_html' => $detailsHtml,
     'footer_contato' => 'contato@institutocuidarbem.com.br | +55 21 99777-9584',
 ]);
 
@@ -441,10 +564,8 @@ try {
 
     $mpdf->SetTitle('Certificado - ' . $nome);
     $mpdf->WriteHTML($html1);
-    drawCertificateBorder($mpdf);
-    $mpdf->AddPage('L');
+    $mpdf->AddPage();
     $mpdf->WriteHTML($html2);
-    drawCertificateBorder($mpdf);
 
     $filename = 'certificado-' . $codigo . '.pdf';
     $mpdf->Output($filename, \Mpdf\Output\Destination::INLINE);

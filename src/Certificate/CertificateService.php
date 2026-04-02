@@ -23,7 +23,6 @@ final class CertificateService
         string $dataEmissao,
         ?string $cargaHoraria,
         ?string $atividade,
-        ?string $instrutor,
     ): array
     {
         $nome = trim($nome);
@@ -31,7 +30,6 @@ final class CertificateService
         $dataEmissao = trim($dataEmissao);
         $cargaHoraria = $cargaHoraria !== null ? trim($cargaHoraria) : null;
         $atividade = $atividade !== null ? trim($atividade) : null;
-        $instrutor = $instrutor !== null ? trim($instrutor) : null;
 
         if ($nome === '') {
             throw new \InvalidArgumentException('Nome é obrigatório.');
@@ -40,10 +38,10 @@ final class CertificateService
             throw new \InvalidArgumentException('Data de emissão inválida (use YYYY-MM-DD).');
         }
 
-        $hash = $this->gerarHash($nome, $funcao, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
-        $id = $this->repo->insert($hash, $nome, $funcao, $dataEmissao, $cargaHoraria, $atividade, $instrutor);
+        $hash = $this->gerarHash($nome, $funcao, $dataEmissao, $cargaHoraria, $atividade);
+        $id = $this->repo->insert($hash, $nome, $funcao, $dataEmissao, $cargaHoraria);
 
-        $validarUrl = rtrim($this->baseUrlValidacao, '/') . '/public/validar.php?h=' . rawurlencode($hash);
+        $validarUrl = rtrim($this->baseUrlValidacao, '/') . '/validar.php?h=' . rawurlencode($hash);
         $qrPath = $this->qr->generatePng($validarUrl, $hash);
 
         return [
@@ -69,10 +67,8 @@ final class CertificateService
         string $dataEmissao,
         ?string $cargaHoraria,
         ?string $atividade,
-        ?string $instrutor,
     ): string
     {
-        // Se você quiser mudar os "ingredientes", é só ajustar esta string base.
         $nonce = bin2hex(random_bytes(16));
         $base = implode('|', [
             $nome,
@@ -80,7 +76,6 @@ final class CertificateService
             $dataEmissao,
             $cargaHoraria ?? '',
             $atividade ?? '',
-            $instrutor ?? '',
             $nonce,
         ]);
 

@@ -15,13 +15,12 @@ final class CertificateRepository
         ?string $funcao,
         string $dataEmissao,
         ?string $cargaHoraria,
-        ?string $atividade,
-        ?string $instrutor,
+        int $hasAssinaturaAdicional = 0,
     ): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO certificados (hash, nome, funcao, data_emissao, carga_horaria, atividade, instrutor)
-             VALUES (:hash, :nome, :funcao, :data_emissao, :carga_horaria, :atividade, :instrutor)'
+            'INSERT INTO certificados (hash, nome, funcao, data_emissao, carga_horaria, has_assinatura_adicional)
+             VALUES (:hash, :nome, :funcao, :data_emissao, :carga_horaria, :has_assinatura_adicional)'
         );
 
         $stmt->execute([
@@ -30,8 +29,7 @@ final class CertificateRepository
             ':funcao' => $funcao,
             ':data_emissao' => $dataEmissao,
             ':carga_horaria' => $cargaHoraria,
-            ':atividade' => $atividade,
-            ':instrutor' => $instrutor,
+            ':has_assinatura_adicional' => $hasAssinaturaAdicional,
         ]);
 
         return (int)$this->pdo->lastInsertId();
@@ -39,7 +37,10 @@ final class CertificateRepository
 
     public function findByHash(string $hash): ?CertificateDTO
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM certificados WHERE hash = :hash LIMIT 1');
+        $stmt = $this->pdo->prepare(
+            'SELECT c.id,c.hash,c.nome,c.funcao,c.data_emissao,c.carga_horaria,c.has_assinatura_adicional,c.criado_em
+        FROM certificados c 
+        WHERE c.hash = :hash LIMIT 1');
         $stmt->execute([':hash' => $hash]);
         $row = $stmt->fetch();
 
@@ -66,4 +67,3 @@ final class CertificateRepository
         return $out;
     }
 }
-

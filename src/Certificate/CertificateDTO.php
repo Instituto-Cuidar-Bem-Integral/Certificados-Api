@@ -12,8 +12,7 @@ readonly class CertificateDTO
         public ?string $funcao,
         public \DateTimeImmutable $dataEmissao,
         public ?string $cargaHoraria,
-        public ?string $atividade,
-        public ?string $instrutor,
+        public int $hasAssinaturaAdicional,
         public \DateTimeImmutable $criadoEm,
     ) {}
 
@@ -29,10 +28,8 @@ readonly class CertificateDTO
             isset($row['funcao']) ? (string)$row['funcao'] : null,
             new \DateTimeImmutable((string)$row['data_emissao']),
             isset($row['carga_horaria']) ? (string)$row['carga_horaria'] : null,
-            isset($row['atividade']) ? (string)$row['atividade'] : null,
-            isset($row['instrutor']) ? (string)$row['instrutor'] : null,
+            isset($row['has_assinatura_adicional']) ? (int)$row['has_assinatura_adicional'] : 0,
             new \DateTimeImmutable((string)$row['criado_em']),
         );
     }
 }
-
