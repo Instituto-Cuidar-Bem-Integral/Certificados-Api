@@ -77,7 +77,8 @@ final class CertificatePdfTemplate
     public const REFERENCE_WIDTH_MM = 297.0;
     public const REFERENCE_HEIGHT_MM = 210.0;
     public const PAGE_WIDTH_MM = 254.0;
-    public const PAGE_HEIGHT_MM = 142.88;
+    public const PAGE_HEIGHT_MM = 142.875;
+    public const BLEED_MM = 0.8;
 
     // Cores do novo modelo
     public const COLOR_PRIMARY = '#1a3c6e';    // Azul escuro principal
@@ -115,6 +116,10 @@ final class CertificatePdfTemplate
         $sy = static fn(float $value): string => self::sy($value);
         $pt = static fn(float $value): string => self::pt($value);
         $qr = static fn(float $value): string => self::scaledNumber($value);
+        $bleed = self::mm(self::BLEED_MM);
+        $fullBleedWidth = self::mm(self::PAGE_WIDTH_MM + (self::BLEED_MM * 2));
+        $fullBleedHeight = self::mm(self::PAGE_HEIGHT_MM + (self::BLEED_MM * 2));
+        $sidebarBleedWidth = self::mm((71.0 * (self::PAGE_WIDTH_MM / self::REFERENCE_WIDTH_MM)) + self::BLEED_MM);
         $nome = e((string)($data['nome'] ?? ''));
         $funcao = e((string)($data['funcao'] ?? ''));
         $horas = e((string)($data['horas'] ?? ''));
@@ -130,134 +135,146 @@ final class CertificatePdfTemplate
         $sidebarSrc = (string)($data['sidebar_src'] ?? '');
 
         $logoHtml = $logoSrc !== ''
-            ? '<img src="' . $logoSrc . '" alt="Logo Instituto Cuidar Bem Integral" style="width: ' . $sx(40.0) . '; height: auto; display: block; margin: 0 auto;">'
+            ? '<img src="' . $logoSrc . '" alt="Logo Instituto Cuidar Bem Integral" style="width: ' . $sx(44.0) . '; height: auto; display: block; margin: 0 auto;">'
             : '';
         $instrutorHtml = '';
         if ($mostrarInstrutor && $instrutorNome !== '' && $instrutorCargo !== '') {
-            $instrutorHtml = '<div style="font-size: ' . $pt(12.0) . '; font-weight: bold; color: #4d4d4d; line-height: 1.15;">' . $instrutorNome . '</div>'
-                . '<div style="font-size: ' . $pt(10.5) . '; color: #666666; line-height: 1.15;">' . $instrutorCargo . '</div>';
+            $instrutorHtml = '<div style="font-family: arial; font-size: ' . $pt(12.8) . '; font-weight: bold; color: #4d4d4d; line-height: 1.15;">' . $instrutorNome . '</div>'
+                . '<div style="font-family: arial; font-size: ' . $pt(11.2) . '; color: #666666; line-height: 1.15;">' . $instrutorCargo . '</div>';
         }
 
         return <<<HTML
-<table style="width: {$mm(self::PAGE_WIDTH_MM)}; height: {$mm(self::PAGE_HEIGHT_MM)}; border-collapse: collapse; border-spacing: 0; background-color: #ffffff;">
-    <tr>
-        <td style="
-            width: {$sx(67.0)};
-            height: {$mm(self::PAGE_HEIGHT_MM)};
-            padding: 0;
-            vertical-align: top;
-            background-image: url({$sidebarSrc});
-            background-repeat: no-repeat;
-            background-position: left top;
-            background-image-resize: 6;
-        ">
-            <table style="width: {$sx(67.0)}; height: {$mm(self::PAGE_HEIGHT_MM)}; border-collapse: collapse;">
-                <tr>
-                    <td style="height: {$sy(14.0)};"></td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; padding: 0 {$sx(6.0)};">
-                        {$logoHtml}
-                    </td>
-                </tr>
-                <tr>
-                    <td style="height: {$sy(42.0)};"></td>
-                </tr>
-                <tr>
-                    <td style="
-                        vertical-align: top;
-                        padding: 0 {$sx(10.0)} 0 {$sx(13.0)};
-                        color: #ffffff;
-                        font-family: dejavusans;
-                        font-size: {$pt(22.5)};
-                        line-height: 1.33;
-                    ">
-                        Instituto<br>
-                        Cuidar<br>
-                        Bem<br>
-                        Integral
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                </tr>
-            </table>
-        </td>
-        <td style="
-            width: {$sx(230.0)};
-            height: {$mm(self::PAGE_HEIGHT_MM)};
-            padding: {$sy(18.0)} {$sx(12.0)} {$sy(9.0)} {$sx(18.0)};
-            vertical-align: top;
-            background-color: #ffffff;
-            font-family: dejavusans;
-        ">
-            <table style="width: 100%; height: {$sy(183.0)}; border-collapse: collapse; border-spacing: 0;">
-                <tr>
-                    <td style="vertical-align: top;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="vertical-align: top;">
-                                    <div style="
-                                        color: #4d88db;
-                                        font-size: {$pt(42.0)};
-                                        line-height: 1;
-                                        font-weight: normal;
-                                    ">CERTIFICADO</div>
-                                </td>
-                                <td style="width: {$sx(40.0)}; text-align: right; vertical-align: top;">
-                                    <barcode code="{$qrUrl}" type="QR" size="{$qr(1.6)}" error="M" disableborder="1" />
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding-top: {$sy(10.0)}; font-size: {$pt(13.5)}; color: #5c5c5c;">Certificamos que</td>
-                </tr>
-                <tr>
-                    <td style="padding-top: {$sy(4.0)}; font-size: {$pt(28.0)}; font-weight: bold; color: #75d54f;">{$nome}</td>
-                </tr>
-                <tr>
-                    <td style="
-                        padding-top: {$sy(9.0)};
-                        padding-right: {$sx(2.0)};
-                        font-size: {$pt(14.8)};
-                        color: #5a5a5a;
-                        line-height: 1.15;
-                        text-align: left;
-                    ">
-                        <div style="width: {$sx(170.0)};">
-                            Atuou como voluntário(a) na função de {$funcao}, cumprindo carga horária total de {$horas}, contribuindo para as atividades institucionais do Instituto Cuidar Bem - Integral.
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding-top: {$sy(11.0)}; font-size: {$pt(14.8)}; color: #5a5a5a;">{$cidade}, {$dataEmissao}.</td>
-                </tr>
-                <tr>
-                    <td style="height: {$sy(42.0)};"></td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="width: 58%; text-align: left; vertical-align: bottom;">
-                                    <div style="width: {$sx(74.0)}; text-align: center;">
-                                        <div style="font-size: {$pt(12.0)}; font-weight: bold; color: #4d4d4d; line-height: 1.15;">{$assinanteNome}</div>
-                                        <div style="font-size: {$pt(10.5)}; color: #666666; line-height: 1.15;">{$assinanteCargo}</div>
-                                    </div>
-                                </td>
-                                <td style="width: 42%; text-align: center; vertical-align: bottom;">
-                                    {$instrutorHtml}
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
+<div style="
+    position: absolute;
+    left: -{$bleed};
+    top: -{$bleed};
+    width: {$fullBleedWidth};
+    height: {$fullBleedHeight};
+    background-color: #ffffff;
+"></div>
+
+<div style="
+    position: absolute;
+    left: -{$bleed};
+    top: -{$bleed};
+    width: {$sidebarBleedWidth};
+    height: {$fullBleedHeight};
+    background-image: url({$sidebarSrc});
+    background-repeat: no-repeat;
+    background-position: left top;
+    background-image-resize: 6;
+"></div>
+
+<div style="
+    position: absolute;
+    left: {$sx(8.0)};
+    top: {$sy(13.0)};
+    width: {$sx(50.0)};
+    text-align: center;
+">
+    {$logoHtml}
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(11.6)};
+    top: {$sy(122.5)};
+    width: {$sx(43.0)};
+    color: #ffffff;
+    font-family: arial;
+    font-size: {$pt(33.5)};
+    line-height: 1.34;
+">
+    Instituto<br>
+    Cuidar<br>
+    Bem<br>
+    Integral
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(84.0)};
+    top: {$sy(19.5)};
+    color: #4d88db;
+    font-family: arial;
+    font-size: {$pt(58.5)};
+    line-height: 0.9;
+    letter-spacing: {$sx(0.65)};
+    font-weight: normal;
+">CERTIFICADO</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(242.5)};
+    top: {$sy(12.2)};
+    width: {$sx(40.0)};
+    text-align: right;
+">
+    <barcode code="{$qrUrl}" type="QR" size="{$qr(1.68)}" error="M" disableborder="1" />
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(88.0)};
+    top: {$sy(59.5)};
+    font-family: arial;
+    font-size: {$pt(17.0)};
+    color: #5c5c5c;
+">Certificamos que</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(88.0)};
+    top: {$sy(74.6)};
+    font-family: arial;
+    font-size: {$pt(33.8)};
+    font-weight: bold;
+    color: #75d54f;
+">{$nome}</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(88.0)};
+    top: {$sy(94.0)};
+    width: {$sx(198.5)};
+    font-family: arial;
+    font-size: {$pt(16.1)};
+    color: #5a5a5a;
+    line-height: 1.13;
+    text-align: left;
+">
+    Atuou como voluntário(a) na função de {$funcao}, cumprindo carga horária total de {$horas}, contribuindo para as atividades institucionais do Instituto Cuidar Bem - Integral.
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(88.0)};
+    top: {$sy(131.5)};
+    font-family: arial;
+    font-size: {$pt(16.1)};
+    color: #5a5a5a;
+">{$cidade}, {$dataEmissao}.</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(90.0)};
+    top: {$sy(177.8)};
+    width: {$sx(84.0)};
+    text-align: center;
+">
+    <div style="font-family: arial; font-size: {$pt(13.2)}; font-weight: bold; color: #4d4d4d; line-height: 1.15;">{$assinanteNome}</div>
+    <div style="font-family: arial; font-size: {$pt(11.4)}; color: #666666; line-height: 1.15;">{$assinanteCargo}</div>
+</div>
+
+<div style="
+    position: absolute;
+    left: {$sx(214.0)};
+    top: {$sy(177.8)};
+    width: {$sx(43.0)};
+    text-align: center;
+">
+    {$instrutorHtml}
+</div>
 HTML;
     }
 
@@ -270,6 +287,9 @@ HTML;
         $sx = static fn(float $value): string => self::sx($value);
         $sy = static fn(float $value): string => self::sy($value);
         $pt = static fn(float $value): string => self::pt($value);
+        $bleed = self::mm(self::BLEED_MM);
+        $fullBleedWidth = self::mm(self::PAGE_WIDTH_MM + (self::BLEED_MM * 2));
+        $fullBleedHeight = self::mm(self::PAGE_HEIGHT_MM + (self::BLEED_MM * 2));
         $contentHtml = (string)($data['content_html'] ?? '');
         $footerContato = e((string)($data['footer_contato'] ?? ''));
         $backgroundSrc = (string)($data['background_src'] ?? '');
@@ -277,10 +297,10 @@ HTML;
         return <<<HTML
 <div style="
     position: absolute;
-    left: 0;
-    top: 0;
-    width: {$mm(self::PAGE_WIDTH_MM)};
-    height: {$mm(self::PAGE_HEIGHT_MM)};
+    left: -{$bleed};
+    top: -{$bleed};
+    width: {$fullBleedWidth};
+    height: {$fullBleedHeight};
     background-image: url({$backgroundSrc});
     background-repeat: no-repeat;
     background-position: left top;
@@ -298,21 +318,21 @@ HTML;
 
 <div style="
     position: absolute;
-    left: {$sx(18.0)};
+    left: {$sx(6.0)};
     top: {$sy(14.0)};
-    width: {$sx(261.0)};
+    width: {$sx(285.0)};
     text-align: center;
     font-family: dejavusans;
-    font-size: {$pt(21.0)};
+    font-size: {$pt(25.0)};
     font-weight: bold;
     color: #4d88db;
 ">Principais atividades desenvolvidas</div>
 
 <div style="
     position: absolute;
-    left: {$sx(18.0)};
-    top: {$sy(44.0)};
-    right: {$sx(18.0)};
+    left: {$sx(6.0)};
+    top: {$sy(49.0)};
+    right: {$sx(6.0)};
     bottom: {$sy(24.0)};
     font-family: dejavusans;
 ">
@@ -321,12 +341,12 @@ HTML;
 
 <div style="
     position: absolute;
-    left: {$sx(18.0)};
-    right: {$sx(18.0)};
-    bottom: {$sy(12.0)};
+    left: {$sx(6.0)};
+    right: {$sx(6.0)};
+    bottom: {$sy(14.0)};
     text-align: center;
     font-family: dejavusans;
-    font-size: {$pt(10.0)};
+    font-size: {$pt(11.5)};
     color: #5d5d5d;
 ">
     {$footerContato}
@@ -361,7 +381,7 @@ HTML;
      */
     public static function mm(float $value): string
     {
-        return rtrim(rtrim(sprintf('%.2F', $value), '0'), '.') . 'mm';
+        return rtrim(rtrim(sprintf('%.3F', $value), '0'), '.') . 'mm';
     }
 
     public static function pt(float $value): string

@@ -1,5 +1,5 @@
 <?php
-// Página de validação de certificados (acessada via QR Code)
+// Página de validação de certificados
 declare(strict_types=1);
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -11,6 +11,9 @@ $hash = isset($_GET['h']) ? trim((string)$_GET['h']) : '';
 $certificate = null;
 $error = null;
 $isValid = false;
+$institutionName = 'Instituto Cuidar Bem - Integral';
+$institutionResponsible = 'Vitor de Souza Silva';
+$institutionContact = 'contato@institutocuidarbem.com.br | institutocuidarbem.com.br';
 
 // Debug: Log do hash recebido
 error_log("=== DEBUG VALIDAR ===");
@@ -149,6 +152,7 @@ function e(string $v): string
             font-size: 0.9rem;
             color: var(--gray-dark);
             font-weight: 500;
+            line-height: 1.6;
         }
 
         /* Main Content */
@@ -157,61 +161,46 @@ function e(string $v): string
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
+            padding: 48px 20px;
         }
 
         .container {
             background: var(--white);
-            border-radius: 20px;
-            padding: 50px 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 18px 50px rgba(29, 95, 147, 0.12);
+            max-width: 760px;
             width: 100%;
-            text-align: center;
+            border: 1px solid rgba(77, 144, 230, 0.12);
         }
 
         .page-title {
             font-size: 1.6rem;
             font-weight: 700;
             color: var(--black);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
         }
 
         .page-subtitle {
             font-size: 0.95rem;
             color: var(--gray-dark);
-            margin-bottom: 40px;
+            margin-bottom: 28px;
             line-height: 1.6;
         }
 
-        /* QR Code Container */
-        .qr-container {
-            margin: 30px 0;
+        .hero {
+            text-align: center;
+            margin-bottom: 28px;
         }
 
-        .qr-image {
-            width: 250px;
-            height: 250px;
-            margin: 0 auto 20px;
-            border: 4px solid var(--blue-primary);
-            border-radius: 15px;
-            padding: 15px;
-            background: var(--white);
-            box-shadow: 0 5px 20px rgba(77, 144, 230, 0.2);
-        }
-
-        .qr-image canvas,
-        .qr-image img {
-            width: 100%;
-            height: 100%;
-        }
-
-        .qr-label {
+        .summary-text {
             font-size: 0.9rem;
             color: var(--gray-dark);
-            font-weight: 500;
+            line-height: 1.7;
+            max-width: 560px;
+            margin: 0 auto;
         }
 
         /* Status Badge */
@@ -219,11 +208,11 @@ function e(string $v): string
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 15px 30px;
+            padding: 12px 22px;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 1.1rem;
-            margin: 20px 0;
+            font-size: 1rem;
+            margin: 0 0 18px;
         }
 
         .status-valid {
@@ -244,65 +233,61 @@ function e(string $v): string
 
         /* Certificate Info */
         .cert-info {
-            margin: 30px 0;
-            text-align: left;
+            margin: 0;
         }
 
         .cert-info-title {
             font-size: 1rem;
             font-weight: 700;
             color: var(--blue-primary);
-            margin-bottom: 20px;
-            text-align: center;
+            margin-bottom: 18px;
+            text-align: left;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--gray-medium);
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
         }
 
-        .info-row:last-child {
-            border-bottom: none;
+        .info-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid rgba(77, 144, 230, 0.16);
+            border-radius: 16px;
+            padding: 18px;
         }
 
         .info-label {
+            display: block;
             font-size: 0.85rem;
             font-weight: 600;
             color: var(--gray-dark);
+            margin-bottom: 8px;
         }
 
         .info-value {
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--black);
-            text-align: right;
-            max-width: 60%;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
         }
 
-        /* Hash Display */
-        .hash-display {
-            background: var(--gray-light);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.75rem;
-            word-break: break-all;
-            color: var(--gray-dark);
-            border: 1px solid var(--gray-medium);
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 28px;
         }
 
-        .hash-label {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--black);
-            margin-bottom: 8px;
-            display: block;
+        .btn-secondary {
+            background: transparent;
+            color: var(--blue-dark);
+            border: 1px solid rgba(29, 95, 147, 0.24);
+            box-shadow: none;
         }
 
         /* Button */
@@ -314,16 +299,15 @@ function e(string $v): string
             background: var(--blue-primary);
             color: var(--white);
             border: none;
-            padding: 18px 40px;
-            font-size: 1rem;
+            padding: 16px 28px;
+            font-size: 0.95rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            margin-top: 20px;
             box-shadow: 0 5px 20px rgba(77, 144, 230, 0.4);
         }
 
@@ -331,6 +315,12 @@ function e(string $v): string
             background: var(--blue-dark);
             transform: translateY(-3px);
             box-shadow: 0 8px 30px rgba(77, 144, 230, 0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(77, 144, 230, 0.08);
+            color: var(--blue-dark);
+            box-shadow: none;
         }
 
         /* Error State */
@@ -385,31 +375,25 @@ function e(string $v): string
         /* Responsive */
         @media (max-width: 600px) {
             .container {
-                padding: 30px 20px;
+                padding: 28px 20px;
             }
 
             .page-title {
                 font-size: 1.3rem;
             }
 
-            .qr-image {
-                width: 200px;
-                height: 200px;
-            }
-
-            .info-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .info-value {
-                text-align: left;
-                max-width: 100%;
+            .info-grid {
+                grid-template-columns: 1fr;
             }
 
             .btn-verify {
-                padding: 15px 30px;
+                width: 100%;
+                padding: 15px 24px;
                 font-size: 0.9rem;
+            }
+
+            .actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -419,7 +403,7 @@ function e(string $v): string
     <header class="header">
         <img src="public/assets/logo-instituto-cuidar-bem.png" alt="Logo Instituto Cuidar Bem" class="header-logo">
         <h1 class="header-title">VERIFICAR AUTENTICIDADE</h1>
-        <p class="header-subtitle">Este QR Code foi gerado em conformidade com o</p>
+        <p class="header-subtitle">Confirmação oficial dos dados do certificado emitido pelo Instituto Cuidar Bem.</p>
     </header>
 
     <!-- Main Content -->
@@ -427,57 +411,65 @@ function e(string $v): string
         <div class="container">
             <?php if ($isValid && $certificate): ?>
                 <!-- Certificate Valid -->
-                <h2 class="page-title">Certificado Autêntico</h2>
-                <p class="page-subtitle">INSTITUTO CUIDAR BEM - INTEGRAL</p>
-
-                <div class="status-badge status-valid">
-                    <span class="status-icon">✅</span>
-                    <span>Certificado Válido</span>
-                </div>
-
-                <!-- QR Code -->
-                <div class="qr-container">
-                    <div class="qr-image" id="qrcode"></div>
-                    <p class="qr-label">Escaneie o código acima</p>
+                <div class="hero">
+                    <div class="status-badge status-valid">
+                        <span class="status-icon">✅</span>
+                        <span>Certificado Válido</span>
+                    </div>
+                    <h2 class="page-title">Certificado Autêntico</h2>
+                    <p class="page-subtitle"><?php echo e($institutionName); ?></p>
+                    <p class="summary-text">Os dados abaixo foram localizados em nossa base e confirmam a autenticidade deste certificado.</p>
                 </div>
 
                 <!-- Certificate Info -->
                 <div class="cert-info">
                     <h3 class="cert-info-title">Detalhes do Certificado</h3>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Nome do Aluno</span>
-                        <span class="info-value"><?php echo e($certificate->nome); ?></span>
-                    </div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <span class="info-label">Nome</span>
+                            <span class="info-value"><?php echo e($certificate->nome); ?></span>
+                        </div>
 
-                    <div class="info-row">
-                        <span class="info-label">Atividade</span>
-                        <span class="info-value"><?php echo e($certificate->atividade ?? '-'); ?></span>
-                    </div>
+                        <div class="info-card">
+                            <span class="info-label">Função</span>
+                            <span class="info-value"><?php echo e($certificate->funcao ?? '-'); ?></span>
+                        </div>
 
-                    <div class="info-row">
-                        <span class="info-label">Carga Horária</span>
-                        <span class="info-value"><?php echo $certificate->cargaHoraria ? e($certificate->cargaHoraria) . ' horas' : '-'; ?></span>
-                    </div>
+                        <div class="info-card">
+                            <span class="info-label">Nome da Instituição</span>
+                            <span class="info-value"><?php echo e($institutionName); ?></span>
+                        </div>
 
-                    <div class="info-row">
-                        <span class="info-label">Data de Emissão</span>
-                        <span class="info-value"><?php echo formatDate($certificate->dataEmissao); ?></span>
-                    </div>
+                        <div class="info-card">
+                            <span class="info-label">Nome do Responsável</span>
+                            <span class="info-value"><?php echo e($institutionResponsible); ?></span>
+                        </div>
 
-                    <div class="info-row">
+                        <div class="info-card">
+                            <span class="info-label">Contato</span>
+                            <span class="info-value"><?php echo e($institutionContact); ?></span>
+                        </div>
+
+                        <div class="info-card">
+                            <span class="info-label">Carga Horária</span>
+                            <span class="info-value"><?php echo $certificate->cargaHoraria ? e($certificate->cargaHoraria) . ' horas' : '-'; ?></span>
+                        </div>
+
+                        <div class="info-card">
+                            <span class="info-label">Data de Emissão</span>
+                            <span class="info-value"><?php echo formatDate($certificate->dataEmissao); ?></span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Hash -->
-                <div class="hash-display">
-                    <span class="hash-label">Hash do Certificado:</span>
-                    <?php echo e($certificate->hash); ?>
+                <div class="actions">
+                    <a href="#" class="btn-verify" onclick="window.print(); return false;">
+                        🖨️ Imprimir Comprovante
+                    </a>
+                    <a href="https://institutocuidarbem.com.br" class="btn-verify btn-secondary">
+                        🌐 Visitar Site
+                    </a>
                 </div>
-
-                <a href="#" class="btn-verify" onclick="window.print(); return false;">
-                    🖨️ Imprimir Comprovante
-                </a>
 
             <?php else: ?>
                 <!-- Certificate Invalid or Not Found -->
@@ -489,23 +481,17 @@ function e(string $v): string
                             <?php echo e($error); ?>
                         <?php elseif ($hash === ''): ?>
                             Nenhum código de verificação foi informado.<br>
-                            Por favor, escaneie o QR Code do certificado.
+                            Use o link de validação completo para consultar este certificado.
                         <?php else: ?>
                             O certificado informado não foi encontrado em nossa base de dados.<br>
                             Verifique se o código está correto e tente novamente.
                         <?php endif; ?>
                     </p>
-
-                    <?php if ($hash !== ''): ?>
-                        <div class="hash-display">
-                            <span class="hash-label">Hash Consultado:</span>
-                            <?php echo e($hash); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <a href="https://institutocuidarbem.com.br" class="btn-verify">
-                        🏠 Visitar Site
-                    </a>
+                    <div class="actions">
+                        <a href="https://institutocuidarbem.com.br" class="btn-verify">
+                            🏠 Visitar Site
+                        </a>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -513,23 +499,12 @@ function e(string $v): string
 
     <!-- Footer -->
     <footer class="footer">
-        <p class="footer-title">INSTITUTO CUIDAR BEM - INTEGRAL</p>
+        <p class="footer-title"><?php echo e($institutionName); ?></p>
         <p class="footer-text">
             contato@institutocuidarbem.com.br | +55 21 99777-9584
         </p>
         <p class="footer-copy">© 2026 Instituto Cuidar Bem - Todos os direitos reservados</p>
     </footer>
 
-    <!-- QR Code Generator -->
-    <?php if ($isValid && $certificate): ?>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script>
-        // Generate QR Code
-        var qr = qrcode(0, 'M');
-        qr.addData(window.location.href);
-        qr.make();
-        document.getElementById('qrcode').innerHTML = qr.createImgTag(5, 10);
-    </script>
-    <?php endif; ?>
 </body>
 </html>
